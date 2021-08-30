@@ -2,8 +2,8 @@ version: "3"
 
 services:
   crypto-trading:
-    image: idkravitz/binance-trade-bot
-    container_name: binance_trader
+    image: tntwist_binance_trade_bot
+    container_name: tntwist_binance_trader
     working_dir: /app
     volumes:
       - ./user.cfg:/app/user.cfg
@@ -16,8 +16,8 @@ services:
       - PYTHONUNBUFFERED=1
 
   api:
-    image: idkravitz/binance-trade-bot
-    container_name: binance_trader_api
+    image: tntwist_binance_trade_bot
+    container_name: tntwist_binance_trader_api
     working_dir: /app
     volumes:
       - ./user.cfg:/app/user.cfg

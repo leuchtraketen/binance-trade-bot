@@ -18,6 +18,7 @@ class AutoTrader:
         self.logger = logger
         self.config = config
         self.failed_buy_order = False
+        self.last_prices = {}
 
     def initialize(self):
         self.initialize_trade_thresholds()
@@ -163,7 +164,40 @@ class AutoTrader:
         # if we have any viable options, pick the one with the biggest ratio
         if ratio_dict:
             best_pair = max(ratio_dict, key=ratio_dict.get)
-            self.logger.info(f"Will be jumping from {coin} to {best_pair.to_coin_id}")
+            self.logger.info(f"Attempting to jump from {coin} to {best_pair.to_coin_id}")
+
+            if coin + self.config.BRIDGE_SYMBOL not in self.last_prices:
+                self.logger.info(f"There is no trade-history for {coin + self.config.BRIDGE_SYMBOL}, waiting...")
+                return
+
+            if len(coin + self.config.BRIDGE_SYMBOL not in self.last_prices) < 5:
+                self.logger.info(f"Trade-history for {coin + self.config.BRIDGE_SYMBOL} is too small, waiting...")
+                return
+
+            do_trade = False
+
+            bl = None
+            bh = None
+            c = None
+
+            for price in self.last_prices[coin + self.config.BRIDGE_SYMBOL]:
+                if bl is None or c is None or price > c:
+                   bl = price * 0.99
+                   bh = price * 1.05
+               
+                if bl is not None and price < bl:
+                   do_trade = True
+                   
+                if bh is not None and price > bh:
+                   do_trade = False
+
+                c = price
+
+            if not do_trade:
+                self.logger.info(f"{coin} seems to be in an uptrend, waiting...")
+                self.logger.info(f"{self.last_prices[coin + self.config.BRIDGE_SYMBOL]}")
+                return 
+
             self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
 
     def bridge_scout(self):
@@ -208,6 +242,24 @@ class AutoTrader:
                 continue
             usd_value = self.manager.get_ticker_price(coin + self.config.BRIDGE_SYMBOL)
             btc_value = self.manager.get_ticker_price(coin + "BTC")
+
+            if coin + self.config.BRIDGE_SYMBOL not in self.last_prices:
+                self.last_prices[coin + self.config.BRIDGE_SYMBOL] = [usd_value]
+            else:
+                self.last_prices[coin + self.config.BRIDGE_SYMBOL].append(usd_value)
+
+            if coin + "BTC" not in self.last_prices:
+                self.last_prices[coin + "BTC"] = [btc_value]
+            else:
+                self.last_prices[coin + "BTC"].append(btc_value)
+
+            # keep just the 10 last values
+            if len(self.last_prices[coin + self.config.BRIDGE_SYMBOL]) == 11:
+                del self.last_prices[coin + self.config.BRIDGE_SYMBOL][0]
+
+            if len(self.last_prices[coin + "BTC"]) == 11:
+                del self.last_prices[coin + "BTC"][0]
+
             cv = CoinValue(coin, balance, usd_value, btc_value, datetime=now)
             cv_batch.append(cv)
         self.db.batch_update_coin_values(cv_batch)

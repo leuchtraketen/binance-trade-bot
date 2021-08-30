@@ -529,7 +529,7 @@ class BinanceAPIManager:
         if order is None:
             return None
 
-        self.logger.info(f"Bought {origin_symbol}")
+        self.logger.info(f"Bought {origin_symbol} for {order.cumulative_quote_qty} {target_symbol}")
 
         trade_log.set_complete(order.cumulative_quote_qty)
 
@@ -604,7 +604,7 @@ class BinanceAPIManager:
         while new_balance >= origin_balance:
             new_balance = self.get_currency_balance(origin_symbol, True)
 
-        self.logger.info(f"Sold {origin_symbol}")
+        self.logger.info(f"Sold {origin_symbol} for {order.cumulative_quote_qty} {target_symbol}")
 
         trade_log.set_complete(order.cumulative_quote_qty)
 
