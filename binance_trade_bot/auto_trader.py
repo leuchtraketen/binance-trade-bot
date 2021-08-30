@@ -170,7 +170,7 @@ class AutoTrader:
                 self.logger.info(f"There is no trade-history for {coin + self.config.BRIDGE_SYMBOL}, waiting...")
                 return
 
-            if len(coin + self.config.BRIDGE_SYMBOL not in self.last_prices) < 5:
+            if len(self.last_prices[coin + self.config.BRIDGE_SYMBOL]) < 5:
                 self.logger.info(f"Trade-history for {coin + self.config.BRIDGE_SYMBOL} is too small, waiting...")
                 return
 
