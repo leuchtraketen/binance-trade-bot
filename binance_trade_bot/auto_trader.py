@@ -167,12 +167,15 @@ class AutoTrader:
             self.logger.info(f"Attempting to jump from {coin} to {best_pair.to_coin_id}")
 
             if coin + self.config.BRIDGE_SYMBOL not in self.last_prices:
-                self.logger.info(f"There is no trade-history for {coin + self.config.BRIDGE_SYMBOL}, waiting...")
+                self.update_values()
+                self.logger.info(f"There is no trade-history for {coin + self.config.BRIDGE_SYMBOL}, creating...")
                 return
 
-            if len(self.last_prices[coin + self.config.BRIDGE_SYMBOL]) < 5:
-                self.logger.info(f"Trade-history for {coin + self.config.BRIDGE_SYMBOL} is too small, waiting...")
-                return
+            self.logger.info(f"Trade-history for {coin + self.config.BRIDGE_SYMBOL}: {self.last_prices[coin + self.config.BRIDGE_SYMBOL]}")
+
+            #if len(self.last_prices[coin + self.config.BRIDGE_SYMBOL]) < 5:
+            #    self.logger.info(f"Trade-history for {coin + self.config.BRIDGE_SYMBOL} is too small, waiting...")
+            #    return
 
             do_trade = False
 
@@ -195,7 +198,6 @@ class AutoTrader:
 
             if not do_trade:
                 self.logger.info(f"{coin} seems to be in an uptrend, waiting...")
-                self.logger.info(f"{self.last_prices[coin + self.config.BRIDGE_SYMBOL]}")
                 return 
 
             self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
