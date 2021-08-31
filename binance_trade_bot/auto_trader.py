@@ -175,16 +175,20 @@ class AutoTrader:
         # if we have any viable options, pick the one with the biggest ratio
         if ratio_dict:
             best_pair = max(ratio_dict, key=ratio_dict.get)
-            self.logger.info(f"Attempting to jump from {coin} to {best_pair.to_coin_id}")
 
             if self.allow_trade == False:
 
                 trailing_stop_price = simulated_sell_price * 1.0025
 
-                self.logger.info(f"{coin}: waiting for trailing stop to trigger: {self.trailing_stop}") # prozentualen abstand anzeigen?
-                self.logger.info(f"{coin}: current price: {coin_price}")
+                if self.trailing_stop is None:
+                    self.logger.info(f"Probably will jump from {coin} to another one")
+                    self.logger.info(f"{coin}: current price: {coin_price}")
+                    self.logger.info(f"{coin}: init trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
+                    self.trailing_stop = trailing_stop_price
 
-                if self.trailing_stop is None or trailing_stop_price >= self.trailing_stop:
+                if trailing_stop_price >= self.trailing_stop:
+                    self.logger.info(f"{coin}: current price: {coin_price}")
+                    self.logger.info(f"{coin}: raising trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
                     self.trailing_stop = trailing_stop_price
                 else:
                     if coin_price <= self.trailing_stop:
@@ -192,8 +196,15 @@ class AutoTrader:
 
                 return
 
+            self.logger.info(f"Trailing stop ({self.trailing_stop}) triggered! Jumping from {coin} to {best_pair.to_coin_id}")
+
             self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
+
+            self.trailing_stop = None
+            self.allow_trade = False
+
         else:
+            self.trailing_stop = None
             self.allow_trade = False
 
     def bridge_scout(self):
