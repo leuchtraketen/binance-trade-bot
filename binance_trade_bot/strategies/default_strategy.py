@@ -19,19 +19,19 @@ class Strategy(AutoTrader):
             self.bridge_scout()
 
         current_coin = self.db.get_current_coin()
-        # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
-        # stopped. Not logging though to reduce log size.
-        print(
-            f"{datetime.now()} - CONSOLE - INFO - I am scouting the best trades. "
-            f"Current coin: {current_coin + self.config.BRIDGE} ",
-            end="\r",
-        )
-
         current_coin_price = self.manager.get_sell_price(current_coin + self.config.BRIDGE)
 
         if current_coin_price is None:
             self.logger.info("Skipping scouting... current coin {} not found".format(current_coin + self.config.BRIDGE))
             return
+
+        # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
+        # stopped. Not logging though to reduce log size.
+        print(
+            f"{datetime.now()} - CONSOLE - INFO - I am scouting the best trades. "
+            f"{current_coin}: current price: {current_coin_price} {self.config.BRIDGE}",
+            end="\n",
+        )
 
         self._jump_to_best_coin(current_coin, current_coin_price)
 

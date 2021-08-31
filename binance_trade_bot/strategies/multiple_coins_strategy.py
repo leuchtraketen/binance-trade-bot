@@ -15,7 +15,7 @@ class Strategy(AutoTrader):
         print(
             f"{self.manager.now()} - CONSOLE - INFO - I am scouting the best trades. "
             f"Current coins: {active_coins} ",
-            end="\r",
+            end="\n",
         )
 
         for coin in active_coins:
