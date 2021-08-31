@@ -174,7 +174,7 @@ class AutoTrader:
                 self.logger.info(f"Trade-history for {coin + self.config.BRIDGE_SYMBOL} is too small, waiting...")
                 return
 
-            do_trade = False
+            do_trade = True
 
             bl = None
             bh = None
