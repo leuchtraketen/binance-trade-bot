@@ -188,22 +188,22 @@ class AutoTrader:
 
                 if self.trailing_stop is None:
                     self.trailing_stop = trailing_stop_price * 1.0056
-                    self.logger.info(f"Probably will jump from {coin} to another one")
+                    self.logger.info(f"Probably will jump from {coin} to another one ({best_pair.to_coin.symbol})")
                     self.logger.info(f"{coin}: current price: {coin_price}")
                     self.logger.info(f"{coin}: init trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
 
                 if trailing_stop_price >= self.trailing_stop:
                     self.trailing_stop = trailing_stop_price
                     self.logger.info(f"{coin}: current price: {coin_price}")
-                    self.logger.info(f"{coin}: raising trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
+                    self.logger.info(f"{coin}: raising trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})") # prozentualen abstand anzeigen?
                 else:
                     if coin_price <= self.trailing_stop:
                         self.logger.info(f"{coin}: current price: {coin_price}")
-                        self.logger.info(f"{coin}: reached trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
+                        self.logger.info(f"{coin}: reached trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})") # prozentualen abstand anzeigen?
                         self.allow_trade = True
                     else:
                         self.logger.info(f"{coin}: current price: {coin_price}")
-                        self.logger.info(f"{coin}: did not reached trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
+                        self.logger.info(f"{coin}: did not reached trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})") # prozentualen abstand anzeigen?
 
                 return
 
