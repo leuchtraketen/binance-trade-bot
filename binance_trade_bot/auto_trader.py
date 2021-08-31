@@ -194,16 +194,14 @@ class AutoTrader:
 
                 if trailing_stop_price >= self.trailing_stop:
                     self.trailing_stop = trailing_stop_price
-                    self.logger.info(f"{coin}: current price: {coin_price}")
-                    self.logger.info(f"{coin}: raising trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})") # prozentualen abstand anzeigen?
+                    print(f"{coin}: current price: {coin_price}. raising trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})", end="\r")
                 else:
                     if coin_price <= self.trailing_stop:
                         self.logger.info(f"{coin}: current price: {coin_price}")
                         self.logger.info(f"{coin}: reached trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})") # prozentualen abstand anzeigen?
                         self.allow_trade = True
                     else:
-                        self.logger.info(f"{coin}: current price: {coin_price}")
-                        print(f"{coin}: did not reached trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})", end="\r")
+                        print(f"{coin}: current price: {coin_price}. Did not reached trailing stop: {self.trailing_stop} (to {best_pair.to_coin.symbol})", end="\r")
 
                 return
 
