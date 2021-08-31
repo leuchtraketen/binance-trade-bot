@@ -174,8 +174,8 @@ class AutoTrader:
         ratio_dict = {k: v for k, v in ratio_dict.items() if v > 0}
         ratio_dict_all = {k: v for k, v in ratio_dict.items()}
 
-        ratio_dict_str = json.dumps(ratio_dict)
-        ratio_dict_all_str = json.dumps(ratio_dict_all)
+        # ratio_dict_str = json.dumps(ratio_dict)
+        # ratio_dict_all_str = json.dumps(ratio_dict_all)
         # self.logger.info(f"ratios: {ratio_dict_all_str}\n")
 
         # if we have any viable options, pick the one with the biggest ratio
