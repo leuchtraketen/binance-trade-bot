@@ -21,12 +21,12 @@ class Strategy(AutoTrader):
         self.initialize_current_coin()
         self.reinit_threshold = self.manager.now().replace(second=0, microsecond=0)
         self.logger.info(f"Ratio adjust weight: {self.config.RATIO_ADJUST_WEIGHT}")
-    
+
     def scout(self):
         #check if previous buy order failed. If so, bridge scout for a new coin.
         if self.failed_buy_order:
             self.bridge_scout()
-        
+
         base_time: datetime = self.manager.now()
         allowed_idle_time = self.reinit_threshold
         if base_time >= allowed_idle_time:
@@ -39,11 +39,11 @@ class Strategy(AutoTrader):
         current_coin = self.db.get_current_coin()
         # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
         # stopped. Not logging though to reduce log size.
-        # print(
-        #     f"{self.manager.now()} - CONSOLE - INFO - I am scouting the best trades. "
-        #     f"Current coin: {current_coin + self.config.BRIDGE} ",
-        #     end="\r",
-        # )
+        print(
+            f"{self.manager.now()} - CONSOLE - INFO - I am scouting the best trades. "
+            f"Current coin: {current_coin + self.config.BRIDGE} ",
+            end="\r",
+        )
 
         current_coin_price = self.manager.get_sell_price(current_coin + self.config.BRIDGE)
 
