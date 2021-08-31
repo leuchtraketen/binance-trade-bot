@@ -164,7 +164,7 @@ class AutoTrader:
         Given a coin, search for a coin to jump to
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
-        simulated_sell_price = coin_price * 0.99
+        simulated_sell_price = coin_price * 0.994
         if self.allow_trade == True:
             simulated_sell_price = coin_price
 
@@ -184,18 +184,18 @@ class AutoTrader:
 
             if self.allow_trade == False:
 
-                trailing_stop_price = simulated_sell_price * 1.0025
+                trailing_stop_price = simulated_sell_price * 0.996
 
                 if self.trailing_stop is None:
+                    self.trailing_stop = trailing_stop_price * 1.056
                     self.logger.info(f"Probably will jump from {coin} to another one")
                     self.logger.info(f"{coin}: current price: {coin_price}")
                     self.logger.info(f"{coin}: init trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
-                    self.trailing_stop = trailing_stop_price
 
                 if trailing_stop_price >= self.trailing_stop:
+                    self.trailing_stop = trailing_stop_price
                     self.logger.info(f"{coin}: current price: {coin_price}")
                     self.logger.info(f"{coin}: raising trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
-                    self.trailing_stop = trailing_stop_price
                 else:
                     if coin_price <= self.trailing_stop:
                         self.logger.info(f"{coin}: current price: {coin_price}")
