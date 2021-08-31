@@ -215,6 +215,9 @@ class AutoTrader:
             self.allow_trade = False
 
         else:
+            if self.allow_trade == True:
+                self.logger.info(f"Won't jump from {coin} to another one, ratio got worse")
+
             self.trailing_stop = None
             self.allow_trade = False
 
