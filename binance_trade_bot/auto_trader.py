@@ -1,6 +1,7 @@
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List
+import json
 
 from sqlalchemy.orm import Session
 
@@ -171,6 +172,11 @@ class AutoTrader:
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict.items() if v > 0}
+        ratio_dict_all = {k: v for k, v in ratio_dict.items()}
+
+        ratio_dict_str = json.dumps(ratio_dict)
+        ratio_dict_all_str = json.dumps(ratio_dict_all)
+        # self.logger.info(f"ratios: {ratio_dict_all_str}\n")
 
         # if we have any viable options, pick the one with the biggest ratio
         if ratio_dict:
@@ -192,7 +198,12 @@ class AutoTrader:
                     self.trailing_stop = trailing_stop_price
                 else:
                     if coin_price <= self.trailing_stop:
+                        self.logger.info(f"{coin}: current price: {coin_price}")
+                        self.logger.info(f"{coin}: reached trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
                         self.allow_trade = True
+                    else:
+                        self.logger.info(f"{coin}: current price: {coin_price}")
+                        self.logger.info(f"{coin}: did not reached trailing stop: {self.trailing_stop}") # prozentualen abstand anzeigen?
 
                 return
 
