@@ -206,7 +206,9 @@ class AutoTrader:
         Given a coin, search for a coin to jump to
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
-        simulated_sell_price = round(coin_price * 0.995, 4)
+        simulated_sell_price = round(coin_price * 0.996, 4)
+        if self.trailing_stop is not None:
+            simulated_sell_price = self.trailing_stop
         if self.allow_trade == True:
             simulated_sell_price = coin_price
 
@@ -221,8 +223,9 @@ class AutoTrader:
 
             if self.allow_trade == False:
 
-                trailing_stop_price = round(simulated_sell_price * 0.997, 4)
                 # trailing_stop_price = simulated_sell_price
+
+                trailing_stop_price = round(coin_price * 0.993, 4)
 
                 if self.trailing_stop is None:
                     self.trailing_stop = round(trailing_stop_price * 1.0036, 4)
