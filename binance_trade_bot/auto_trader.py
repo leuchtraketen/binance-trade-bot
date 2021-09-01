@@ -161,7 +161,10 @@ class AutoTrader:
 
 
     def _get_jump_candidate_log(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
-        simulated_sell_price = round(coin_price * 0.996, 4)
+        # simulated_sell_price = round(coin_price * 0.996, 4)
+        simulated_sell_price = coin_price * 0.996
+        if self.trailing_stop is not None:
+            simulated_sell_price = self.trailing_stop
         if self.allow_trade == True:
             simulated_sell_price = coin_price
 
@@ -206,7 +209,8 @@ class AutoTrader:
         Given a coin, search for a coin to jump to
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
-        simulated_sell_price = round(coin_price * 0.996, 4)
+        # simulated_sell_price = round(coin_price * 0.996, 4)
+        simulated_sell_price = coin_price * 0.996
         if self.trailing_stop is not None:
             simulated_sell_price = self.trailing_stop
         if self.allow_trade == True:
@@ -223,10 +227,12 @@ class AutoTrader:
 
             if self.allow_trade == False:
 
-                trailing_stop_price = round(coin_price * 0.993, 4)
+                # trailing_stop_price = round(coin_price * 0.993, 4)
+                trailing_stop_price = coin_price * 0.993
 
                 if self.trailing_stop is None:
-                    self.trailing_stop = round(trailing_stop_price * 1.0036, 4)
+                    # self.trailing_stop = round(trailing_stop_price * 1.0036, 4)
+                    self.trailing_stop = trailing_stop_price * 1.0036
                     self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                     self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                     self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
