@@ -160,24 +160,62 @@ class AutoTrader:
         return (ratio_dict, prices)
 
 
+    def _get_jump_candidate_log(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
+        simulated_sell_price = round(coin_price * 0.995, 4)
+        if self.allow_trade == True:
+            simulated_sell_price = coin_price
+
+        ratio_dict_all, prices = self._get_ratios(coin, simulated_sell_price, excluded_coins)
+
+        # keep only ratios bigger than zero
+        ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
+
+        # ratio_dict_str = json.dumps(ratio_dict)
+        # ratio_dict_all_str = json.dumps(ratio_dict_all)
+        # self.logger.info(f"ratios: {ratio_dict_all_str}\n")
+
+        ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
+
+#        self.logger.info(f"\n")
+        for f_pair, f_ratio in ratio_dict_all_sorted.items():
+#            self.logger.info(f"pair: {f_pair}, ratio: {f_ratio}")
+            True
+
+        s = ""
+        s += "best candidates: "
+        sep = ""
+        for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+            f_ratio_rounded = round(f_ratio, 5)
+            s += sep
+            s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+            sep = ", "
+        s += ", "
+        s += "worst candidates: "
+        sep = ""
+        for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
+            f_ratio_rounded = round(f_ratio, 5)
+            s += sep
+            s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+            sep = ", "
+
+        return s
+
+
     def _jump_to_best_coin(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
         """
         Given a coin, search for a coin to jump to
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
-        simulated_sell_price = round(coin_price * 0.995, 4)
+        simulated_sell_price = round(coin_price * 0.996, 4)
+        if self.trailing_stop is not None:
+            simulated_sell_price = self.trailing_stop
         if self.allow_trade == True:
             simulated_sell_price = coin_price
 
-        ratio_dict, prices = self._get_ratios(coin, simulated_sell_price, excluded_coins)
+        ratio_dict_all, prices = self._get_ratios(coin, simulated_sell_price, excluded_coins)
 
         # keep only ratios bigger than zero
-        ratio_dict = {k: v for k, v in ratio_dict.items() if v > 0}
-        ratio_dict_all = {k: v for k, v in ratio_dict.items()}
-
-        # ratio_dict_str = json.dumps(ratio_dict)
-        # ratio_dict_all_str = json.dumps(ratio_dict_all)
-        # self.logger.info(f"ratios: {ratio_dict_all_str}\n")
+        ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
 
         # if we have any viable options, pick the one with the biggest ratio
         if ratio_dict:
@@ -185,8 +223,8 @@ class AutoTrader:
 
             if self.allow_trade == False:
 
-                trailing_stop_price = round(simulated_sell_price * 0.997, 4)
-
+                trailing_stop_price = round(coin_price * 0.993, 4)
+                
                 if self.trailing_stop is None:
                     self.trailing_stop = round(trailing_stop_price * 1.0036, 4)
                     self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")

@@ -45,9 +45,10 @@ class Strategy(AutoTrader):
 
         # Display on the console, the current coin+Bridge, so users can see *some* activity and not think the bot has
         # stopped. Not logging though to reduce log size.
+        log_str_candidates = self._get_jump_candidate_log(current_coin, current_coin_price)
         print(
             f"{datetime.now()} - CONSOLE - INFO - I am scouting the best trades. "
-            f"{current_coin}: current price: {current_coin_price} {self.config.BRIDGE}",
+            f"{current_coin}: current price: {current_coin_price} {self.config.BRIDGE} ({log_str_candidates})",
             end="\n",
         )
 
@@ -111,7 +112,7 @@ class Strategy(AutoTrader):
             for pair in session.query(Pair).all():
                 if not pair.from_coin.enabled or not pair.to_coin.enabled:
                     continue
-                #self.logger.debug(f"Initializing {pair.from_coin} vs {pair.to_coin}", False)
+                # self.logger.info(f"Initializing {pair.from_coin} vs {pair.to_coin}")
 
                 from_coin_price = self.manager.get_sell_price(pair.from_coin + self.config.BRIDGE)
                 if from_coin_price is None:
@@ -146,7 +147,7 @@ class Strategy(AutoTrader):
             price_history = {}
 
             init_weight = self.config.RATIO_ADJUST_WEIGHT
-            
+
             #Binance api allows retrieving max 1000 candles
             if init_weight > 500:
                 init_weight = 500
