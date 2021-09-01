@@ -223,8 +223,6 @@ class AutoTrader:
 
             if self.allow_trade == False:
 
-                # trailing_stop_price = simulated_sell_price
-
                 trailing_stop_price = round(coin_price * 0.993, 4)
 
                 if self.trailing_stop is None:
