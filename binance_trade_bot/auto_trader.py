@@ -186,12 +186,10 @@ class AutoTrader:
             if self.allow_trade == False:
 
                 trailing_stop_price = round(simulated_sell_price * 0.997, 4)
-                # trailing_stop_price = simulated_sell_price
 
                 if self.trailing_stop is None:
                     self.trailing_stop = round(trailing_stop_price * 1.0036, 4)
-                    # self.trailing_stop = trailing_stop_price
-                    self.logger.info(f"Probably will jump from {coin} to <{best_pair.to_coin.symbol}>")
+                    self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                     self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                     self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
