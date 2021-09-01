@@ -496,7 +496,7 @@ class BinanceAPIManager:
             order_quantity = self._buy_quantity(origin_symbol, target_symbol, target_balance, from_coin_price)
         else:
             order_quantity = buy_quantity
-        self.logger.info(f"Buying {order_quantity} <{origin_symbol}> (price: {round(buy_price, 2)})")
+        self.logger.info(f"Buying {order_quantity} <{origin_symbol}> (price: {round(buy_price, 4)})")
 
         # Try to buy until successful
         order = None
@@ -529,7 +529,7 @@ class BinanceAPIManager:
         if order is None:
             return None
 
-        self.logger.info(f"Bought {order_quantity} <{origin_symbol}> (price: {round(order.price, 2)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
+        self.logger.info(f"Bought {order_quantity} <{origin_symbol}> (price: {round(order.price, 4)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
 
         trade_log.set_complete(order.cumulative_quote_qty)
 
@@ -568,7 +568,7 @@ class BinanceAPIManager:
         trade_log = self.db.start_trade_log(origin_coin, target_coin, True)
 
         order_quantity = self._sell_quantity(origin_symbol, target_symbol, origin_balance)
-        self.logger.info(f"Selling {order_quantity} <{origin_symbol}> (price: {round(sell_price, 2)}). Balance: {origin_balance} <{origin_symbol}>")
+        self.logger.info(f"Selling {order_quantity} <{origin_symbol}> (price: {round(sell_price, 4)}). Balance: {origin_balance} <{origin_symbol}>")
 
         order = None
         order_guard = self.stream_manager.acquire_order_guard()
@@ -603,7 +603,7 @@ class BinanceAPIManager:
         while new_balance >= origin_balance:
             new_balance = self.get_currency_balance(origin_symbol, True)
 
-        self.logger.info(f"Sold {order_quantity} <{origin_symbol}> (price: {round(order.price, 2)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
+        self.logger.info(f"Sold {order_quantity} <{origin_symbol}> (price: {round(order.price, 4)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
 
         trade_log.set_complete(order.cumulative_quote_qty)
 
