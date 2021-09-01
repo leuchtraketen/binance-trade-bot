@@ -161,7 +161,7 @@ class AutoTrader:
 
 
     def _get_jump_candidate_log(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
-        simulated_sell_price = round(coin_price * 0.995, 4)
+        simulated_sell_price = round(coin_price * 0.996, 4)
         if self.allow_trade == True:
             simulated_sell_price = coin_price
 
@@ -224,7 +224,7 @@ class AutoTrader:
             if self.allow_trade == False:
 
                 trailing_stop_price = round(coin_price * 0.993, 4)
-                
+
                 if self.trailing_stop is None:
                     self.trailing_stop = round(trailing_stop_price * 1.0036, 4)
                     self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
