@@ -165,7 +165,7 @@ class AutoTrader:
         Given a coin, search for a coin to jump to
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
-        simulated_sell_price = coin_price * 0.994
+        simulated_sell_price = round(coin_price * 0.994, 2)
         if self.allow_trade == True:
             simulated_sell_price = coin_price
 
@@ -185,17 +185,19 @@ class AutoTrader:
 
             if self.allow_trade == False:
 
-                trailing_stop_price = simulated_sell_price * 0.996
+                # trailing_stop_price = round(simulated_sell_price * 0.996, 2)
+                trailing_stop_price = simulated_sell_price
 
                 if self.trailing_stop is None:
-                    self.trailing_stop = trailing_stop_price * 1.0056
+                    # self.trailing_stop = round(trailing_stop_price * 1.0056, 2)
+                    self.trailing_stop = trailing_stop_price
                     self.logger.info(f"Probably will jump from {coin} to <{best_pair.to_coin.symbol}>")
                     self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                     self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
                 if trailing_stop_price >= self.trailing_stop:
                     self.trailing_stop = trailing_stop_price
-                    print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop}  {self.config.BRIDGE}                              ", end="\n")
+                    print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} ↑↑↑                             ", end="\n")
                 else:
                     if coin_price <= self.trailing_stop:
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")

@@ -568,7 +568,7 @@ class BinanceAPIManager:
         trade_log = self.db.start_trade_log(origin_coin, target_coin, True)
 
         order_quantity = self._sell_quantity(origin_symbol, target_symbol, origin_balance)
-        self.logger.info(f"Selling {order_quantity} <{origin_symbol}> (price: {round(buy_price, 2)}). Balance: {origin_balance} <{origin_symbol}>")
+        self.logger.info(f"Selling {order_quantity} <{origin_symbol}> (price: {round(sell_price, 2)}). Balance: {origin_balance} <{origin_symbol}>")
 
         order = None
         order_guard = self.stream_manager.acquire_order_guard()
