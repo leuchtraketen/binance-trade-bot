@@ -227,6 +227,7 @@ class AutoTrader:
 
                 if self.trailing_stop is None:
                     self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
+                    self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
                     self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                     self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                     self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
@@ -251,6 +252,7 @@ class AutoTrader:
 
             self.trailing_stop = None
             self.allow_trade = False
+            self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
 
         else:
             if self.allow_trade == True:
@@ -258,6 +260,7 @@ class AutoTrader:
 
             self.trailing_stop = None
             self.allow_trade = False
+            self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
 
     def bridge_scout(self):
         """
