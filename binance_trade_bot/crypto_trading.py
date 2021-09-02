@@ -8,6 +8,7 @@ from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
+import sys
 
 def main():
     logger = Logger()
