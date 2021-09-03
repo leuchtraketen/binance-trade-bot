@@ -1,5 +1,4 @@
 #!python3
-import time
 
 from .binance_api_manager import BinanceAPIManager
 from .config import Config
@@ -9,6 +8,16 @@ from .scheduler import SafeScheduler
 from .strategies import get_strategy
 
 import sys
+import time
+import readchar
+
+from threading import Thread
+
+def key_thread():
+    k = None
+    while True:
+        k = repr(readchar.readkey())
+        print(f"key: {k}")
 
 def main():
     logger = Logger()
@@ -42,6 +51,10 @@ def main():
     logger.info(f"Buy type: {config.BUY_ORDER_TYPE}, Sell type: {config.SELL_ORDER_TYPE}")
     logger.info(f"Max price changes for buys: {config.BUY_MAX_PRICE_CHANGE}, Max price changes for sells: {config.SELL_MAX_PRICE_CHANGE}")
     logger.info(f"Using {config.PRICE_TYPE} prices")
+
+    thread = Thread(target = key_thread)
+    ## thread.start()
+    # time.sleep(10000)
 
     logger.info("Creating database schema if it doesn't already exist")
     db.create_database()

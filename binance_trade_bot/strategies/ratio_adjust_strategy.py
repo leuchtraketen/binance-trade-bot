@@ -129,7 +129,10 @@ class Strategy(AutoTrader):
                     # )
                     continue
 
-                pair.ratio = (pair.ratio *self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
+                if pair.ratio is None:
+                    continue
+
+                pair.ratio = (pair.ratio * self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
 
     def initialize_trade_thresholds(self):
         """
