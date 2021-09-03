@@ -125,7 +125,7 @@ class AutoTrader:
         raise NotImplementedError()
 
 
-    def _get_simulated_coin_price(self, log: bool):
+    def _get_simulated_coin_price(self, coin_price, log: bool):
         if self.trailing_stop is not None:
             simulated_coin_price = self.trailing_stop * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
         else:
@@ -180,7 +180,7 @@ class AutoTrader:
 
 
     def _get_jump_candidate_log(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
-        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(False), excluded_coins)
+        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, False), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
@@ -225,7 +225,7 @@ class AutoTrader:
         print(f"current {Fore.MAGENTA}{coin}{Style.RESET_ALL} price: {Back.BLACK}{Fore.WHITE}{Style.BRIGHT} {coin_price} {Style.RESET_ALL} {self.config.BRIDGE}", end="\n")
         print(f"trailing stop: {Fore.CYAN if self.trailing_stop is not None else Fore.RED}{self.trailing_stop}{Style.RESET_ALL}", end="\n")
 
-        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(True), excluded_coins)
+        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, True), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
