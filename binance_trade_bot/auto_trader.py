@@ -11,6 +11,9 @@ from .database import Database, LogScout
 from .logger import Logger
 from .models import Coin, CoinValue, Pair
 
+import colorama
+from colorama import Fore, Back, Style
+
 
 class AutoTrader:
     def __init__(self, binance_manager: BinanceAPIManager, database: Database, logger: Logger, config: Config):
@@ -25,8 +28,6 @@ class AutoTrader:
 
         self.trailing_stop = None
         self.allow_trade = False
-
-        self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
 
     def initialize(self):
         self.initialize_trade_thresholds()
@@ -123,6 +124,23 @@ class AutoTrader:
         """
         raise NotImplementedError()
 
+
+    def _get_simulated_coin_price(self, log: bool):
+        if self.trailing_stop is not None:
+            simulated_coin_price = self.trailing_stop * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
+        else:
+            simulated_coin_price = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
+
+        if self.allow_trade == True:
+            simulated_coin_price = coin_price
+
+        if log: 
+            print(f"simulated sell price: {simulated_coin_price}", end="\n")
+
+
+        return simulated_coin_price
+
+
     def _get_ratios(self, coin: Coin, coin_price, excluded_coins: List[Coin] = []):
         """
         Given a coin, get the current price ratio for every other enabled coin
@@ -147,9 +165,9 @@ class AutoTrader:
                 continue
 
             scout_logs.append(LogScout(pair, pair.ratio, coin_price, optional_coin_price))
-
+ 
             # Obtain (current coin)/(optional coin)
-            coin_opt_coin_ratio = coin_price * self.trailing_stop_ratio_calc_coin_price_multiplier / optional_coin_price
+            coin_opt_coin_ratio = coin_price / optional_coin_price
 
             transaction_fee = self.manager.get_fee(pair.from_coin, self.config.BRIDGE, True) + self.manager.get_fee(
                 pair.to_coin, self.config.BRIDGE, False
@@ -163,7 +181,7 @@ class AutoTrader:
 
 
     def _get_jump_candidate_log(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
-        ratio_dict_all, prices = self._get_ratios(coin, coin_price, excluded_coins)
+        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(False), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
@@ -204,15 +222,11 @@ class AutoTrader:
         Given a coin, search for a coin to jump to
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
-        if self.allow_trade == True:
-            self.trailing_stop_ratio_calc_coin_price_multiplier = 1
 
-        print(f"trailing_stop: {self.trailing_stop}", end="\n")
-        print(f"trailing_stop_ratio_calc_coin_price_multiplier: {self.trailing_stop_ratio_calc_coin_price_multiplier}", end="\n")
-        print(f"coin_price: {coin_price}", end="\n")
-        print(f"sim_coin_price: {coin_price * self.trailing_stop_ratio_calc_coin_price_multiplier}", end="\n")
+        print(f"current {Fore.MAGENTA}{coin}{Style.RESET_ALL} price: {Back.BLACK}{Fore.WHITE}{Style.BRIGHT} {coin_price} {Style.RESET_ALL} {self.config.BRIDGE}", end="\n")
+        print(f"trailing stop: {Fore.CYAN if self.trailing_stop is not None else Fore.RED}{self.trailing_stop}{Style.RESET_ALL}", end="\n")
 
-        ratio_dict_all, prices = self._get_ratios(coin, coin_price, excluded_coins)
+        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(True), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
@@ -227,15 +241,13 @@ class AutoTrader:
 
                 if self.trailing_stop is None:
                     self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
-                    self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
                     self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                     self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                     self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
                 if trailing_stop_price >= self.trailing_stop:
                     self.trailing_stop = trailing_stop_price
-                    self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
-                    print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} ↑↑↑                             ", end="\n")
+                    print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}                             ", end="\n")
                 else:
                     if coin_price <= self.trailing_stop:
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
@@ -252,15 +264,16 @@ class AutoTrader:
 
             self.trailing_stop = None
             self.allow_trade = False
-            self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
 
         else:
             if self.allow_trade == True:
-                self.logger.info(f"Won't jump from {coin} to another one, ratio got worse")
+                self.logger.info(f"{Fore.RED}Won't jump{Style.RESET_ALL} from {coin} to another one, ratio got worse")
+            else:
+                if self.trailing_stop is not None:
+                    self.logger.info(f"{Fore.RED}Removing trailing stop{Style.RESET_ALL}, ratio got worse")
 
             self.trailing_stop = None
             self.allow_trade = False
-            self.trailing_stop_ratio_calc_coin_price_multiplier = self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT * self.config.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER
 
     def bridge_scout(self):
         """

@@ -14,6 +14,8 @@ services:
     command: python -m binance_trade_bot
     environment:
       - PYTHONUNBUFFERED=1
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
 
   api:
     image: tntwist_binance_trade_bot
