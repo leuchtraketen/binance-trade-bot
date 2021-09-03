@@ -155,9 +155,7 @@ class AutoTrader:
                 pair.to_coin, self.config.BRIDGE, False
             )
 
-            ratio_dict[pair] = ((
-                coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio
-            ) - pair.ratio) * 100 / pair.ratio
+            ratio_dict[pair] = ((coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio) - pair.ratio) * 100 / pair.ratio
 
         self.db.batch_log_scout(scout_logs)
         return (ratio_dict, prices)
