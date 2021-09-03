@@ -42,7 +42,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "auto_adjust_bnb_balance_rate": "3",
             "trailing_stop":"true",
             "trailing_stop_coin_price_multiplier_init":"0.9965",
-            "trailing_stop_coin_price_multiplier": "0.994",
+            "trailing_stop_coin_price_multiplier": "0.9955",
             "trailing_stop_ratio_calc_coin_price_multiplier": "0.9995",
         }
 
