@@ -2,6 +2,7 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List
 import json
+import time
 
 from sqlalchemy.orm import Session
 
@@ -28,6 +29,8 @@ class AutoTrader:
 
         self.trailing_stop = None
         self.allow_trade = False
+
+        self.trailing_stop_timeout = None
 
     def initialize(self):
         self.initialize_trade_thresholds()
@@ -224,6 +227,9 @@ class AutoTrader:
 
         print(f"current {Fore.MAGENTA}{coin}{Style.RESET_ALL} price: {Back.BLACK}{Fore.WHITE}{Style.BRIGHT} {coin_price} {Style.RESET_ALL} {self.config.BRIDGE}", end="\n")
         print(f"trailing stop: {Fore.CYAN if self.trailing_stop is not None else Fore.RED}{self.trailing_stop}{Style.RESET_ALL}", end="\n")
+        
+        if self.trailing_stop_timeout is not None:
+            print(f"trailing stop timeout in: {str(self.trailing_stop_timeout-time.time()) + 's'}", end="\n")
 
         ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, True), excluded_coins)
 
@@ -240,12 +246,14 @@ class AutoTrader:
 
                 if self.trailing_stop is None:
                     self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
+                    self.trailing_stop_timeout = time.time()+300
                     self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                     self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                     self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
                 if trailing_stop_price >= self.trailing_stop:
                     self.trailing_stop = trailing_stop_price
+                    self.trailing_stop_timeout = time.time()+300
                     print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}                             ", end="\n")
                 else:
                     if coin_price <= self.trailing_stop:
@@ -253,6 +261,10 @@ class AutoTrader:
                         self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE} REACHED!") # prozentualen abstand anzeigen?
                         self.allow_trade = True
                     else:
+                        if self.trailing_stop_timeout < time.time():
+                            self.allow_trade = True
+                            self.logger.info(f"{coin}: TRAILING STOP TIMEOUT REACHED!")
+
                         print(f"{coin}: current price: {coin_price}. trailing stop: {self.trailing_stop} {self.config.BRIDGE}                                  ", end="\n")
 
                 return
@@ -263,6 +275,7 @@ class AutoTrader:
 
             self.trailing_stop = None
             self.allow_trade = False
+            self.trailing_stop_timeout = None
 
         else:
             if self.allow_trade == True:
@@ -273,6 +286,7 @@ class AutoTrader:
 
             self.trailing_stop = None
             self.allow_trade = False
+            self.trailing_stop_timeout = None
 
     def bridge_scout(self):
         """
