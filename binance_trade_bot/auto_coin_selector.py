@@ -13,11 +13,11 @@ class AutoCoinSelector:
         self.config = config
 
 
-    def get_enabled_coins(self): 
+    def get_coins_to_trade(self): 
 
-        self.logger.info(f"Using auto coin selector to get supported coins - min volume: {self.config.AUTO_COIN_SELECTOR_MIN_VOLUME}")
+        self.logger.info(f"Using auto coin selector to get coins to trade - min volume: {self.config.AUTO_COIN_SELECTOR_MIN_VOLUME}")
 
-        enabled_coins = []
+        coins_to_trade = []
 
         tradable_coins = self.manager.get_tradable_coins(self.config.BRIDGE.symbol)
 
@@ -28,7 +28,7 @@ class AutoCoinSelector:
 
             ticker = self.manager.get_ticker(coin + self.config.BRIDGE.symbol)
             if float(ticker['quoteVolume']) >= self.config.AUTO_COIN_SELECTOR_MIN_VOLUME:
-                enabled_coins.append(coin)
+                coins_to_trade.append(coin)
 
 
         # append current coin if current coin isn't an option anymore yet we're still hodling it
@@ -39,8 +39,8 @@ class AutoCoinSelector:
         else: 
             current_coin = current_coin.symbol
 
-        if current_coin and current_coin not in enabled_coins:
-            enabled_coins.append(current_coin)
+        if current_coin and current_coin not in coins_to_trade:
+            coins_to_trade.append(current_coin)
 
 
-        return enabled_coins
+        return coins_to_trade

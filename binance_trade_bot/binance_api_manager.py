@@ -121,7 +121,6 @@ class BinanceAPIManager:
         self.cache = cache
         self.order_balance_manager = order_balance_manager
         self.stream_manager: Optional[BinanceStreamManager] = None
-        self.setup_websockets()
 
     @staticmethod
     def _common_factory(
@@ -169,7 +168,8 @@ class BinanceAPIManager:
             self.cache,
             self.config,
             self.binance_client,
-            self.logger,
+            self.db,
+            self.logger
         )
 
     @cached(cache=TTLCache(maxsize=1, ttl=43200))

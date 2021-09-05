@@ -26,11 +26,29 @@ def main():
 
     config = Config()
     db = Database(logger, config)
+
     if config.ENABLE_PAPER_TRADING:
         manager = BinanceAPIManager.create_manager_paper_trading(config, db, logger, {config.BRIDGE.symbol: 21_000.0})
     else:
         manager = BinanceAPIManager.create_manager(config, db, logger)
 
+
+    logger.info("Creating database schema if it doesn't already exist")
+    db.create_database()
+
+
+    if config.SUPPORTED_COINS_METHOD == 'auto':
+        auto_coin_selector = AutoCoinSelector(manager, db, logger, config)
+        coins_to_trade = auto_coin_selector.get_coins_to_trade()
+        db.set_coins(coins_to_trade)
+    else:
+        db.set_coins(config.SUPPORTED_COIN_LIST)
+
+
+    # needs to be executed AFTER updating to new coins!
+    manager.setup_websockets()
+
+    
     # check if we can access API feature that require valid config
     try:
         _ = manager.get_account()
@@ -57,17 +75,6 @@ def main():
     ## thread.start()
     # time.sleep(10000)
 
-    logger.info("Creating database schema if it doesn't already exist")
-    db.create_database()
-
-
-    if config.SUPPORTED_COINS_METHOD == 'auto':
-        auto_coin_selector = AutoCoinSelector(manager, db, logger, config)
-        db.set_coins(auto_coin_selector.get_enabled_coins())
-    else:
-        db.set_coins(config.SUPPORTED_COIN_LIST)
-
-    db.migrate_old_state()
 
     trader.initialize()
 
@@ -76,7 +83,7 @@ def main():
     schedule.every(15).seconds.do(trader.track_last_prices).tag("track last prices")
 
     #if config.SUPPORTED_COINS_METHOD == 'auto':
-    #    schedule.every(10).minutes.do(db.set_coins, symbols=auto_coin_selector.get_enabled_coins()).tag("update supported coins")
+    #    schedule.every(10).minutes.do(db.set_coins, symbols=auto_coin_selector.get_coins_to_trade()).tag("update supported coins")
     # todo: blocking, also ratio init has to be done again, should not be executed while an order is running or trailing stop or anything like that....
 
     schedule.every(1).minutes.do(trader.update_values).tag("updating value history")

@@ -271,36 +271,6 @@ class Database:
             namespace="/backend",
         )
 
-    def migrate_old_state(self):
-        """
-        For migrating from old dotfile format to SQL db. This method should be removed in
-        the future.
-        """
-        if os.path.isfile(".current_coin"):
-            with open(".current_coin") as f:
-                coin = f.read().strip()
-                self.logger.info(f".current_coin file found, loading current coin {coin}")
-                self.set_current_coin(coin)
-            os.rename(".current_coin", ".current_coin.old")
-            self.logger.info(".current_coin renamed to .current_coin.old - You can now delete this file")
-
-        if os.path.isfile(".current_coin_table"):
-            with open(".current_coin_table") as f:
-                self.logger.info(".current_coin_table file found, loading into database")
-                table: dict = json.load(f)
-                session: Session
-                with self.db_session() as session:
-                    for from_coin, to_coin_dict in table.items():
-                        for to_coin, ratio in to_coin_dict.items():
-                            if from_coin == to_coin:
-                                continue
-                            pair = session.merge(self.get_pair(from_coin, to_coin))
-                            pair.ratio = ratio
-                            session.add(pair)
-
-            os.rename(".current_coin_table", ".current_coin_table.old")
-            self.logger.info(".current_coin_table renamed to .current_coin_table.old - " "You can now delete this file")
-
     def batch_update_coin_values(self, cv_batch: List[CoinValue]):
         session: Session
         with self.db_session() as session:
