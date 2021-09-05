@@ -6,6 +6,7 @@ from .database import Database
 from .logger import Logger
 from .scheduler import SafeScheduler
 from .strategies import get_strategy
+from .auto_coin_selector import AutoCoinSelector
 
 import sys
 import time
@@ -59,7 +60,13 @@ def main():
     logger.info("Creating database schema if it doesn't already exist")
     db.create_database()
 
-    db.set_coins(config.SUPPORTED_COIN_LIST)
+
+    if config.SUPPORTED_COINS_METHOD == 'auto':
+        auto_coin_selector = AutoCoinSelector(manager, db, logger, config)
+        db.set_coins(auto_coin_selector.get_enabled_coins())
+    else:
+        db.set_coins(config.SUPPORTED_COIN_LIST)
+
     db.migrate_old_state()
 
     trader.initialize()
@@ -67,6 +74,11 @@ def main():
     schedule = SafeScheduler(logger)
     schedule.every(config.SCOUT_SLEEP_TIME).seconds.do(trader.scout).tag("scouting")
     schedule.every(15).seconds.do(trader.track_last_prices).tag("track last prices")
+
+    #if config.SUPPORTED_COINS_METHOD == 'auto':
+    #    schedule.every(10).minutes.do(db.set_coins, symbols=auto_coin_selector.get_enabled_coins()).tag("update supported coins")
+    # todo: blocking, also ratio init has to be done again, should not be executed while an order is running or trailing stop or anything like that....
+
     schedule.every(1).minutes.do(trader.update_values).tag("updating value history")
     schedule.every(1).minutes.do(db.prune_scout_history).tag("pruning scout history")
     schedule.every(1).hours.do(db.prune_value_history).tag("pruning value history")

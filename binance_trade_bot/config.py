@@ -44,6 +44,8 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "trailing_stop_coin_price_multiplier_init":"0.9965",
             "trailing_stop_coin_price_multiplier": "0.9955",
             "trailing_stop_ratio_calc_coin_price_multiplier": "0.9995",
+            "supported_coins_method": "list",
+            "auto_coin_selector_min_volume": "80000000"
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -82,8 +84,6 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             coin.strip() for coin in os.environ.get("SUPPORTED_COIN_LIST", "").split() if coin.strip()
         ]
 
-        self.TRADE_FEE = os.environ.get("TRADE_FEE") or config.get(USER_CFG_SECTION, "trade_fee")
-
         # Get supported coin list from supported_coin_list file
         if not supported_coin_list and os.path.exists("supported_coin_list"):
             with open("supported_coin_list") as rfh:
@@ -93,6 +93,8 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
                         continue
                     supported_coin_list.append(line)
         self.SUPPORTED_COIN_LIST = supported_coin_list
+
+        self.TRADE_FEE = os.environ.get("TRADE_FEE") or config.get(USER_CFG_SECTION, "trade_fee")
 
         self.CURRENT_COIN_SYMBOL = os.environ.get("CURRENT_COIN_SYMBOL") or config.get(USER_CFG_SECTION, "current_coin")
 
@@ -175,4 +177,26 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
 
         self.TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER = float(
             os.environ.get("TRAILING_STOP_RATIO_CALC_COIN_PRICE_MULTIPLIER") or config.get(USER_CFG_SECTION, "trailing_stop_ratio_calc_coin_price_multiplier")
+        )
+
+        supported_coins_method_str = os.environ.get("SUPPORTED_COINS_METHOD") or config.get(USER_CFG_SECTION, "supported_coins_method")
+        self.SUPPORTED_COINS_METHOD = str(supported_coins_method_str).lower()
+
+        # Get auto coin selector blacklist list from the environment
+        auto_coin_selector_blacklist = [
+            coin.strip() for coin in os.environ.get("AUTO_COIN_SELECTOR_BLACKLIST", "").split() if coin.strip()
+        ]
+
+        # Get auto coin selector blacklist from auto_coin_selector_blacklist file
+        if not auto_coin_selector_blacklist and os.path.exists("auto_coin_selector_blacklist"):
+            with open("auto_coin_selector_blacklist") as rfh:
+                for line in rfh:
+                    line = line.strip()
+                    if not line or line.startswith("#") or line in auto_coin_selector_blacklist:
+                        continue
+                    auto_coin_selector_blacklist.append(line)
+        self.AUTO_COIN_SELECTOR_BLACKLIST = auto_coin_selector_blacklist
+
+        self.AUTO_COIN_SELECTOR_MIN_VOLUME = float(
+            os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME") or config.get(USER_CFG_SECTION, "auto_coin_selector_min_volume")
         )

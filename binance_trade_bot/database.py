@@ -51,6 +51,9 @@ class Database:
         session.close()
 
     def set_coins(self, symbols: List[str]):
+
+        self.logger.info(f"setting coins: {symbols}")
+
         session: Session
 
         # Add coins to the database and set them as enabled or not

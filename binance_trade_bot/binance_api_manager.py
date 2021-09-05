@@ -216,6 +216,35 @@ class BinanceAPIManager:
         """
         return self.binance_client.get_account()
 
+    def get_exchange_info(self):
+        """
+        Get account information
+        """
+        return self.binance_client.get_exchange_info()
+
+
+    def get_tradable_coins(self, quote_asset=None):
+        exchange_info = self.get_exchange_info()
+
+        tradable_coins = []
+
+        for symbol in exchange_info['symbols']:
+            if symbol['status'] != 'TRADING':
+                continue
+
+            if quote_asset is not None:
+                if symbol['quoteAsset'] != quote_asset:
+                    continue
+
+            tradable_coins.append(symbol['baseAsset'])
+
+        return tradable_coins
+
+
+    def get_ticker(self, ticker_symbol: str):
+        return self.binance_client.get_ticker(symbol = ticker_symbol)
+
+
     def get_buy_price(self, ticker_symbol: str):
         price_type = self.config.PRICE_TYPE
         if price_type == Config.PRICE_TYPE_ORDERBOOK:
