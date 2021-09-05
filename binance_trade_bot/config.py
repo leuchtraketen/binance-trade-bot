@@ -45,7 +45,8 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "trailing_stop_coin_price_multiplier": "0.9955",
             "trailing_stop_ratio_calc_coin_price_multiplier": "0.9995",
             "supported_coins_method": "list",
-            "auto_coin_selector_min_volume": "80000000"
+            "auto_coin_selector_min_volume": "80000000",
+            "auto_coin_selector_add_coins_from_list": "True"
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -200,3 +201,6 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.AUTO_COIN_SELECTOR_MIN_VOLUME = float(
             os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME") or config.get(USER_CFG_SECTION, "auto_coin_selector_min_volume")
         )
+
+        auto_coin_selector_add_coins_from_list_str = os.environ.get("AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST") or config.get(USER_CFG_SECTION, "auto_coin_selector_add_coins_from_list")
+        self.AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST = str(auto_coin_selector_add_coins_from_list_str).lower() == "true"

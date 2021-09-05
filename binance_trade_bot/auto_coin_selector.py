@@ -31,6 +31,13 @@ class AutoCoinSelector:
                 coins_to_trade.append(coin)
 
 
+        # append supported_coin_list if configured so
+        if self.config.AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST:
+            for coin in self.config.SUPPORTED_COIN_LIST:
+                if coin not in coins_to_trade:
+                    coins_to_trade.append(coin)
+
+
         # append current coin if current coin isn't an option anymore yet we're still hodling it
         current_coin = self.db.get_current_coin()
 
