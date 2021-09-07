@@ -13,7 +13,7 @@ class AutoCoinSelector:
         self.config = config
 
 
-    def get_coins_to_trade(self): 
+    def get_coins_to_trade(self):
 
         self.logger.info(f"Using auto coin selector to get coins to trade - min volume: {self.config.AUTO_COIN_SELECTOR_MIN_VOLUME}")
 
@@ -43,7 +43,7 @@ class AutoCoinSelector:
 
         if current_coin is None:
             current_coin = self.config.CURRENT_COIN_SYMBOL
-        else: 
+        else:
             current_coin = current_coin.symbol
 
         if current_coin and current_coin not in coins_to_trade:
