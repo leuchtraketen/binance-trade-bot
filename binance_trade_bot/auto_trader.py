@@ -232,7 +232,7 @@ class AutoTrader:
                 f_ratio_rounded = round(f_ratio, 5)
                 f_ratio_debug = ratio_debug[f_pair]
                 s += sep
-                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded} [{f_ratio_debug}])"
+                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
                 sep = ", "
             s += ", "
             s += "worst candidates: "
@@ -241,8 +241,19 @@ class AutoTrader:
                 f_ratio_rounded = round(f_ratio, 5)
                 f_ratio_debug = ratio_debug[f_pair]
                 s += sep
-                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded} [{f_ratio_debug}])"
+                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
                 sep = ", "
+            s += "\n"
+            s += "best candidates:\n"
+            for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                f_ratio_rounded = round(f_ratio, 5)
+                f_ratio_debug = ratio_debug[f_pair]
+                s += f"  - {f_pair.to_coin.symbol} ({f_ratio_rounded} [{f_ratio_debug}])\n"
+            s += "worst candidates:\n"
+            for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
+                f_ratio_rounded = round(f_ratio, 5)
+                f_ratio_debug = ratio_debug[f_pair]
+                s += f"  - {f_pair.to_coin.symbol} ({f_ratio_rounded} [{f_ratio_debug}])\n"
         else:
             s = ""
             s += "best candidates: "

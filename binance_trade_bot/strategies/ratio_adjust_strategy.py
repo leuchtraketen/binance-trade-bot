@@ -47,7 +47,7 @@ class Strategy(AutoTrader):
         # stopped. Not logging though to reduce log size.
         log_str_candidates = self._get_jump_candidate_log(current_coin, current_coin_price)
         print(
-            f"{current_coin}: ({log_str_candidates})",
+            f"{current_coin}: {log_str_candidates}",
             end="\n",
         )
 
