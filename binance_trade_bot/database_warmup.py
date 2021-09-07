@@ -89,6 +89,8 @@ class WarmUpTrader(AutoTrader):
                     continue
 
                 pair.ratio = from_coin_price / to_coin_price
+                pair.from_coin_price = from_coin_price
+                pair.to_coin_price = to_coin_price
 
 def warmup_database(coin_list: List[str] = None, db_path = "data/crypto_trading.db", config: Config = None):
     logger = Logger()

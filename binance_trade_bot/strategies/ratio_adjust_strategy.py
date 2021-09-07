@@ -133,6 +133,8 @@ class Strategy(AutoTrader):
                     continue
 
                 pair.ratio = (pair.ratio * self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
+                pair.from_coin_price = from_coin_price
+                pair.to_coin_price = to_coin_price
 
     def initialize_trade_thresholds(self):
         """
@@ -198,5 +200,7 @@ class Strategy(AutoTrader):
                         cumulative_ratio = (cumulative_ratio * init_weight + price_history[from_coin_symbol][i] / price_history[to_coin_symbol][i]) / (init_weight + 1)
 
                     pair.ratio = cumulative_ratio
+                    pair.from_coin_price = None
+                    pair.to_coin_price = None
 
             self.logger.info(f"Finished ratio init...")
