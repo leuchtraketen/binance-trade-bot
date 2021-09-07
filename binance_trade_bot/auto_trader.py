@@ -123,6 +123,8 @@ class AutoTrader:
             for from_coin_symbol, group in grouped_pairs.items():
                 self.logger.info(f"Initializing {from_coin_symbol} vs [{', '.join([p.to_coin.symbol for p in group])}]")
                 for pair in group:
+                    if pair.from_coin == self.config.BRIDGE:
+                        continue
                     from_coin_price = self.manager.get_sell_price(pair.from_coin + self.config.BRIDGE)
                     if from_coin_price is None:
                         self.logger.info(
