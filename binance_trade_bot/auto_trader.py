@@ -16,6 +16,22 @@ import colorama
 from colorama import Fore, Back, Style
 
 
+
+
+class RatioDebug:
+
+    from_coin_price_now = None
+    to_coin_price_now = None
+    from_coin_price_database = None
+    to_coin_price_database = None
+
+    def __init__(self):
+        True
+
+    def __repr__(self):
+        return f"now: {self.from_coin_price_now} / {self.to_coin_price_now}, database: {self.from_coin_price_database} / {self.to_coin_price_database}"
+
+
 class AutoTrader:
     def __init__(self, binance_manager: BinanceAPIManager, database: Database, logger: Logger, config: Config):
         self.manager = binance_manager
@@ -154,6 +170,7 @@ class AutoTrader:
         """
         ratio_dict: Dict[Pair, float] = {}
         prices: Dict[str, float] = {}
+        ratio_debug: Dict[Pair, RatioDebug] = {}
 
         scout_logs = []
         excluded_coin_symbols = [c.symbol for c in excluded_coins]
@@ -178,12 +195,20 @@ class AutoTrader:
 
             ratio_dict[pair] = ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) - pair.ratio) * 100 / pair.ratio
 
+            d = RatioDebug()
+            d.from_coin_price_now = coin_price
+            d.to_coin_price_now = candidate_coin_price
+            d.from_coin_price_database = pair.from_coin_price
+            d.to_coin_price_database = pair.to_coin_price
+            ratio_debug[pair] = d
+
+
         self.db.batch_log_scout(scout_logs)
-        return (ratio_dict, prices)
+        return (ratio_dict, prices, ratio_debug)
 
 
     def _get_jump_candidate_log(self, coin: Coin, coin_price: float, excluded_coins: List[Coin] = []):
-        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, False), excluded_coins)
+        ratio_dict_all, prices, ratio_debug = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, False), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
@@ -205,6 +230,7 @@ class AutoTrader:
             sep = ""
             for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
                 f_ratio_rounded = round(f_ratio, 5)
+                f_ratio_debug = ratio_debug[f_pair]
                 s += sep
                 s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
                 sep = ", "
@@ -213,9 +239,21 @@ class AutoTrader:
             sep = ""
             for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
                 f_ratio_rounded = round(f_ratio, 5)
+                f_ratio_debug = ratio_debug[f_pair]
                 s += sep
                 s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
                 sep = ", "
+            s += "\n"
+            s += "best candidates:\n"
+            for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                f_ratio_rounded = round(f_ratio, 5)
+                f_ratio_debug = ratio_debug[f_pair]
+                s += f"  - {f_pair.to_coin.symbol} ({f_ratio_rounded} [{f_ratio_debug}])\n"
+            s += "worst candidates:\n"
+            for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
+                f_ratio_rounded = round(f_ratio, 5)
+                f_ratio_debug = ratio_debug[f_pair]
+                s += f"  - {f_pair.to_coin.symbol} ({f_ratio_rounded} [{f_ratio_debug}])\n"
         else:
             s = ""
             s += "best candidates: "
@@ -249,7 +287,7 @@ class AutoTrader:
         if self.trailing_stop_timeout is not None:
             print(f"trailing stop timeout in: {str(self.trailing_stop_timeout-time.time()) + 's'}", end="\n")
 
-        ratio_dict_all, prices = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, True), excluded_coins)
+        ratio_dict_all, prices, ratio_debug = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, True), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
@@ -320,14 +358,12 @@ class AutoTrader:
             if current_coin_price is None:
                 continue
 
-            ratio_dict, _ = self._get_ratios(coin, current_coin_price)
+            ratio_dict, prices, ratio_debug = self._get_ratios(coin, current_coin_price)
             if not any(v > 0 for v in ratio_dict.values()):
                 # There will only be one coin where all the ratios are negative. When we find it, buy it if we can
                 if bridge_balance > self.manager.get_min_notional(coin.symbol, self.config.BRIDGE.symbol):
                     self.logger.info(f"Will be purchasing {coin} using bridge coin")
-                    result = self.manager.buy_alt(
-                        coin, self.config.BRIDGE, self.manager.get_sell_price(coin + self.config.BRIDGE)
-                    )
+                    result = self.manager.buy_alt(coin, self.config.BRIDGE, self.manager.get_sell_price(coin + self.config.BRIDGE))
                     if result is not None:
                         self.db.set_current_coin(coin)
                         self.failed_buy_order = False
