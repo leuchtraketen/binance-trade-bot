@@ -294,59 +294,73 @@ class AutoTrader:
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
 
-        # if we have any viable options, pick the one with the biggest ratio
-        if ratio_dict:
-            best_pair = max(ratio_dict, key=ratio_dict.get)
+        if self.config.TRAILING_STOP:                
 
-            print(f"{best_pair}", end="\n")
+            # if we have any viable options, pick the one with the biggest ratio
+            if ratio_dict:
 
-            if self.allow_trade == False:
+                best_pair = max(ratio_dict, key=ratio_dict.get)
 
-                trailing_stop_price = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER
+                print(f"{best_pair}", end="\n")
 
-                if self.trailing_stop is None:
-                    self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
-                    self.trailing_stop_timeout = time.time()+120 # init with a lower timeout, if there is movement, the timeout will be set to a higher value
-                    self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
-                    self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
-                    self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
+                if self.allow_trade == False:
 
-                if trailing_stop_price >= self.trailing_stop:
-                    self.trailing_stop = trailing_stop_price
-                    self.trailing_stop_timeout = time.time()+240
-                    print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}                             ", end="\n")
-                else:
-                    if coin_price <= self.trailing_stop:
+                    trailing_stop_price = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER
+
+                    if self.trailing_stop is None:
+                        self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
+                        self.trailing_stop_timeout = time.time()+120 # init with a lower timeout, if there is movement, the timeout will be set to a higher value
+                        self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
-                        self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE} REACHED!") # prozentualen abstand anzeigen?
-                        self.allow_trade = True
+                        self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
+
+                    if trailing_stop_price >= self.trailing_stop:
+                        self.trailing_stop = trailing_stop_price
+                        self.trailing_stop_timeout = time.time()+240
+                        print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}                             ", end="\n")
                     else:
-                        if self.trailing_stop_timeout < time.time():
+                        if coin_price <= self.trailing_stop:
+                            self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
+                            self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE} REACHED!") # prozentualen abstand anzeigen?
                             self.allow_trade = True
-                            self.logger.info(f"{coin}: TRAILING STOP TIMEOUT REACHED!")
+                        else:
+                            if self.trailing_stop_timeout < time.time():
+                                self.allow_trade = True
+                                self.logger.info(f"{coin}: TRAILING STOP TIMEOUT REACHED!")
 
-                        print(f"{coin}: current price: {coin_price}. trailing stop: {self.trailing_stop} {self.config.BRIDGE}                                  ", end="\n")
+                            print(f"{coin}: current price: {coin_price}. trailing stop: {self.trailing_stop} {self.config.BRIDGE}                                  ", end="\n")
 
-                return
+                    return
 
-            self.logger.info(f"Jumping from {coin} to <{best_pair.to_coin_id}>")
+                self.logger.info(f"Jumping from {coin} to <{best_pair.to_coin_id}>")
 
-            self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
+                self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
 
-            self.trailing_stop = None
-            self.allow_trade = not self.config.TRAILING_STOP
-            self.trailing_stop_timeout = None
+                self.trailing_stop = None
+                self.allow_trade = not self.config.TRAILING_STOP
+                self.trailing_stop_timeout = None
 
-        else:
-            if self.allow_trade == True:
-                self.logger.info(f"{Fore.RED}Won't jump{Style.RESET_ALL} from {coin} to another one, ratio got worse")
             else:
-                if self.trailing_stop is not None:
-                    self.logger.info(f"{Fore.RED}Removing trailing stop{Style.RESET_ALL}, ratio got worse")
+                if self.allow_trade == True:
+                    self.logger.info(f"{Fore.RED}Won't jump{Style.RESET_ALL} from {coin} to another one, ratio got worse")
+                else:
+                    if self.trailing_stop is not None:
+                        self.logger.info(f"{Fore.RED}Removing trailing stop{Style.RESET_ALL}, ratio got worse")
 
-            self.trailing_stop = None
-            self.allow_trade = not self.config.TRAILING_STOP
-            self.trailing_stop_timeout = None
+                self.trailing_stop = None
+                self.allow_trade = not self.config.TRAILING_STOP
+                self.trailing_stop_timeout = None
+
+        else: # if not self.config.TRAILING_STOP:
+
+            # if we have any viable options, pick the one with the biggest ratio
+            if ratio_dict:
+                best_pair = max(ratio_dict, key=ratio_dict.get)
+                print(f"{best_pair}", end="\n")
+                self.logger.info(f"Jumping from {coin} to <{best_pair.to_coin_id}>")
+                self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
+
+
 
     def bridge_scout(self):
         """
