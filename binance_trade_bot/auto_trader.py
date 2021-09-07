@@ -240,6 +240,8 @@ class AutoTrader:
         if ratio_dict:
             best_pair = max(ratio_dict, key=ratio_dict.get)
 
+            print(f"{best_pair}", end="\n")
+
             if self.allow_trade == False:
 
                 trailing_stop_price = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER
