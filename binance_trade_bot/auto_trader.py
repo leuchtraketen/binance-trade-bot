@@ -195,7 +195,10 @@ class AutoTrader:
 
             ratio_dict[pair] = ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) - pair.ratio) * 100 / pair.ratio
 
-#            ratio_debug[pair] = { "from_coin_price_now": coin_price, "to_coin_price_now": candidate_coin_price, "from_coin_price_database": pair.from_coin_price, "to_coin_price_database": pair.to_coin_price, }
+            d = RatioDebug()
+            ratio_debug[pair] = d
+
+            # { "from_coin_price_now": coin_price, "to_coin_price_now": candidate_coin_price, "from_coin_price_database": pair.from_coin_price, "to_coin_price_database": pair.to_coin_price, }
 
         self.db.batch_log_scout(scout_logs)
         return (ratio_dict, prices, ratio_debug)
