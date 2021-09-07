@@ -44,7 +44,7 @@ class AutoTrader:
         self.last_trade = None
 
         self.trailing_stop = None
-        self.allow_trade = False
+        self.allow_trade = not self.config.TRAILING_STOP
 
         self.trailing_stop_timeout = None
 
@@ -332,7 +332,7 @@ class AutoTrader:
             self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
 
             self.trailing_stop = None
-            self.allow_trade = False
+            self.allow_trade = not self.config.TRAILING_STOP
             self.trailing_stop_timeout = None
 
         else:
@@ -343,7 +343,7 @@ class AutoTrader:
                     self.logger.info(f"{Fore.RED}Removing trailing stop{Style.RESET_ALL}, ratio got worse")
 
             self.trailing_stop = None
-            self.allow_trade = False
+            self.allow_trade = not self.config.TRAILING_STOP
             self.trailing_stop_timeout = None
 
     def bridge_scout(self):
