@@ -90,6 +90,8 @@ class AutoTrader:
                     continue
 
                 pair.ratio = from_coin_price / coin_price
+                pair.from_coin_price = from_coin_price
+                pair.to_coin_price = coin_price
 
     def initialize_trade_thresholds(self):
         """
@@ -120,6 +122,8 @@ class AutoTrader:
                         continue
 
                     pair.ratio = from_coin_price / to_coin_price
+                    pair.from_coin_price = from_coin_price
+                    pair.to_coin_price = to_coin_price
 
     def scout(self):
         """
@@ -137,7 +141,7 @@ class AutoTrader:
         if self.allow_trade == True:
             simulated_coin_price = coin_price
 
-        if log: 
+        if log:
             print(f"simulated sell price: {simulated_coin_price}", end="\n")
 
 
@@ -158,25 +162,21 @@ class AutoTrader:
             if pair.to_coin.symbol in excluded_coin_symbols:
                 continue
 
-            optional_coin_price = self.manager.get_buy_price(pair.to_coin + self.config.BRIDGE)
-            prices[pair.to_coin_id] = optional_coin_price
+            candidate_coin_price = self.manager.get_buy_price(pair.to_coin + self.config.BRIDGE)
+            prices[pair.to_coin_id] = candidate_coin_price
 
-            if optional_coin_price is None:
-                self.logger.info(
-                    "Skipping scouting... optional coin {} not found".format(pair.to_coin + self.config.BRIDGE)
-                )
+            if candidate_coin_price is None:
+                self.logger.info("Skipping scouting... candidate coin {} not found".format(pair.to_coin + self.config.BRIDGE))
                 continue
 
-            scout_logs.append(LogScout(pair, pair.ratio, coin_price, optional_coin_price))
- 
+            scout_logs.append(LogScout(pair, pair.ratio, coin_price, candidate_coin_price))
+
             # Obtain (current coin)/(optional coin)
-            coin_opt_coin_ratio = coin_price / optional_coin_price
+            current2possible_ratio = coin_price / candidate_coin_price
 
-            transaction_fee = self.manager.get_fee(pair.from_coin, self.config.BRIDGE, True) + self.manager.get_fee(
-                pair.to_coin, self.config.BRIDGE, False
-            )
+            transaction_fee = self.manager.get_fee(pair.from_coin, self.config.BRIDGE, True) + self.manager.get_fee(pair.to_coin, self.config.BRIDGE, False)
 
-            ratio_dict[pair] = ((coin_opt_coin_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * coin_opt_coin_ratio) - pair.ratio) * 100 / pair.ratio
+            ratio_dict[pair] = ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) - pair.ratio) * 100 / pair.ratio
 
         self.db.batch_log_scout(scout_logs)
         return (ratio_dict, prices)
@@ -199,22 +199,40 @@ class AutoTrader:
 #            self.logger.info(f"pair: {f_pair}, ratio: {f_ratio}")
             True
 
-        s = ""
-        s += "best candidates: "
-        sep = ""
-        for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
-            f_ratio_rounded = round(f_ratio, 5)
-            s += sep
-            s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
-            sep = ", "
-        s += ", "
-        s += "worst candidates: "
-        sep = ""
-        for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
-            f_ratio_rounded = round(f_ratio, 5)
-            s += sep
-            s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
-            sep = ", "
+        if self.config.SCOUT_DEBUG:
+            s = ""
+            s += "best candidates: "
+            sep = ""
+            for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                f_ratio_rounded = round(f_ratio, 5)
+                s += sep
+                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                sep = ", "
+            s += ", "
+            s += "worst candidates: "
+            sep = ""
+            for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
+                f_ratio_rounded = round(f_ratio, 5)
+                s += sep
+                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                sep = ", "
+        else:
+            s = ""
+            s += "best candidates: "
+            sep = ""
+            for f_pair, f_ratio in reversed({k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                f_ratio_rounded = round(f_ratio, 5)
+                s += sep
+                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                sep = ", "
+            s += ", "
+            s += "worst candidates: "
+            sep = ""
+            for f_pair, f_ratio in {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[:2]}.items():
+                f_ratio_rounded = round(f_ratio, 5)
+                s += sep
+                s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                sep = ", "
 
         return s
 

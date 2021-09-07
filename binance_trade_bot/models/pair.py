@@ -18,6 +18,10 @@ class Pair(Base):
 
     ratio = Column(Float)
 
+    from_coin_price = Column(Float)
+
+    to_coin_price = Column(Float)
+
     enabled = column_property(
         select([func.count(Coin.symbol) == 2])
         .where(or_(Coin.symbol == from_coin_id, Coin.symbol == to_coin_id))
@@ -25,17 +29,21 @@ class Pair(Base):
         .scalar_subquery()
     )
 
-    def __init__(self, from_coin: Coin, to_coin: Coin, ratio=None):
+    def __init__(self, from_coin: Coin, to_coin: Coin, ratio=None, from_coin_price=None, to_coin_price=None):
         self.from_coin = from_coin
         self.to_coin = to_coin
         self.ratio = ratio
+        self.from_coin_price = from_coin_price
+        self.to_coin_price = to_coin_price
 
     def __repr__(self):
-        return f"<{self.from_coin_id}->{self.to_coin_id} :: {self.ratio}>"
+        return f"<{self.from_coin_id}->{self.to_coin_id} :: {self.ratio} = {self.from_coin_price} / {self.to_coin_price}>"
 
     def info(self):
         return {
             "from_coin": self.from_coin.info(),
             "to_coin": self.to_coin.info(),
             "ratio": self.ratio,
+            "from_coin_price": self.from_coin_price,
+            "to_coin_price": self.to_coin_price,
         }

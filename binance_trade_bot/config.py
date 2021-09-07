@@ -40,6 +40,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "ratio_adjust_weight":"100",
             "auto_adjust_bnb_balance": "false",
             "auto_adjust_bnb_balance_rate": "3",
+            "scout_debug":"true",
             "trailing_stop":"true",
             "trailing_stop_coin_price_multiplier_init":"0.9965",
             "trailing_stop_coin_price_multiplier": "0.9955",
@@ -80,6 +81,10 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.BINANCE_API_SECRET_KEY = os.environ.get("API_SECRET_KEY") or config.get(USER_CFG_SECTION, "api_secret_key")
         self.BINANCE_TLD = os.environ.get("TLD") or config.get(USER_CFG_SECTION, "tld")
 
+
+        self.CURRENT_COIN_SYMBOL = os.environ.get("CURRENT_COIN_SYMBOL") or config.get(USER_CFG_SECTION, "current_coin")
+
+
         # Get supported coin list from the environment
         supported_coin_list = [
             coin.strip() for coin in os.environ.get("SUPPORTED_COIN_LIST", "").split() if coin.strip()
@@ -93,13 +98,15 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
                     if not line or line.startswith("#") or line in supported_coin_list:
                         continue
                     supported_coin_list.append(line)
+        if self.CURRENT_COIN_SYMBOL not in supported_coin_list:
+            supported_coin_list.append(self.CURRENT_COIN_SYMBOL)
         self.SUPPORTED_COIN_LIST = supported_coin_list
 
         self.TRADE_FEE = os.environ.get("TRADE_FEE") or config.get(USER_CFG_SECTION, "trade_fee")
 
-        self.CURRENT_COIN_SYMBOL = os.environ.get("CURRENT_COIN_SYMBOL") or config.get(USER_CFG_SECTION, "current_coin")
-
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(USER_CFG_SECTION, "strategy")
+
+        self.SCOUT_DEBUG = str(os.environ.get("SCOUT_DEBUG") or config.get(USER_CFG_SECTION, "scout_debug")).lower() == "true"
 
         enable_paper_trading_str = os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION, "enable_paper_trading")
         self.ENABLE_PAPER_TRADING = enable_paper_trading_str == "true" or enable_paper_trading_str == "True"

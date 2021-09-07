@@ -144,3 +144,5 @@ class Strategy(AutoTrader):
                     continue
 
                 pair.ratio = from_coin_price / to_coin_price
+                pair.from_coin_price = from_coin_price
+                pair.to_coin_price = to_coin_price
