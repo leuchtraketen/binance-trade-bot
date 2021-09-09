@@ -479,9 +479,7 @@ class BinanceAPIManager:
 
         self.logger.info(f"Needed/available BNB balance: {fee_amount_bnb}/{bnb_balance}, buy quantity: {buy_quantity}...")
 
-        is_bnb_enabled = "BNB" in self.config.SUPPORTED_COIN_LIST
-
-        self.retry(self._buy_alt, Coin("BNB", enabled=is_bnb_enabled), target_coin, bnb_price, buy_quantity)
+        self.retry(self._buy_alt, Coin("BNB"), target_coin, bnb_price, buy_quantity)
 
     def buy_alt(self, origin_coin: Coin, target_coin: Coin, buy_price: float) -> BinanceOrder:
         return self.retry(self._buy_alt, origin_coin, target_coin, buy_price)
