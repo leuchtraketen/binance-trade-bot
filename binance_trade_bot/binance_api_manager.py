@@ -558,6 +558,9 @@ class BinanceAPIManager:
         if order is None:
             return None
 
+        if not order.price:
+            order.price = order.cumulative_quote_qty/order_quantity
+
         self.logger.info(f"Bought {order_quantity} <{origin_symbol}> (price: {round(order.price, 4)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
 
         trade_log.set_complete(order.cumulative_quote_qty)
@@ -631,6 +634,9 @@ class BinanceAPIManager:
         new_balance = self.get_currency_balance(origin_symbol)
         while new_balance >= origin_balance:
             new_balance = self.get_currency_balance(origin_symbol, True)
+
+        if not order.price:
+            order.price = order.cumulative_quote_qty/order_quantity
 
         self.logger.info(f"Sold {order_quantity} <{origin_symbol}> (price: {round(order.price, 4)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
 

@@ -98,7 +98,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
                     if not line or line.startswith("#") or line in supported_coin_list:
                         continue
                     supported_coin_list.append(line)
-        if self.CURRENT_COIN_SYMBOL not in supported_coin_list:
+        if self.CURRENT_COIN_SYMBOL and self.CURRENT_COIN_SYMBOL not in supported_coin_list:
             supported_coin_list.append(self.CURRENT_COIN_SYMBOL)
         self.SUPPORTED_COIN_LIST = supported_coin_list
 
