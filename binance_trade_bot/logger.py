@@ -13,7 +13,7 @@ class Logger:
         self.Logger = logging.getLogger(f"{logging_service}_logger")
         self.Logger.setLevel(logging.DEBUG)
         self.Logger.propagate = False
-        formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s")
         formatter2 = logging.Formatter("%(asctime)s - %(message)s")
 
         # default is "logs/crypto_trading.log"
