@@ -100,7 +100,7 @@ class Strategy(AutoTrader):
 
     def re_initialize_trade_thresholds(self):
         """
-        Update all the ratios a bit (image we jumped to every coin once and saved the current price in the weighted ratio, but just as a 1/Nth of the ratio with N = RATIO_ADJUST_WEIGHT)
+        Update all the ratios a bit by saving the current price in the cumulative ratio, as a 1/Nth of the cumulative ratio with N = RATIO_ADJUST_WEIGHT
         """
         #updates all ratios
         #print('************INITIALIZING RATIOS**********')
