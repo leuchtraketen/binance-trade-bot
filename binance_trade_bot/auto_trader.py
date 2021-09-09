@@ -193,9 +193,41 @@ class AutoTrader:
             # Obtain (current coin)/(optional coin)
             current2possible_ratio = coin_price / candidate_coin_price
 
-            transaction_fee = self.manager.get_fee(pair.from_coin, self.config.BRIDGE, True) + self.manager.get_fee(pair.to_coin, self.config.BRIDGE, False)
+            from_fee =        self.manager.get_fee(pair.from_coin, self.config.BRIDGE, True)
+            to_fee =          self.manager.get_fee(pair.to_coin,   self.config.BRIDGE, False)
+            transaction_fee = from_fee + to_fee - from_fee * to_fee
 
-            ratio_dict[pair] = ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) - pair.ratio) * 100 / pair.ratio
+            ######  Original formula:  #####
+            #
+            #   ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) - pair.ratio)
+            #
+            #
+
+            ######  Normalized formula: #####
+            #
+            #   ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) - pair.ratio) * 100 / pair.ratio
+            #   ((current2possible_ratio - transaction_fee * self.config.SCOUT_MULTIPLIER * current2possible_ratio) / pair.ratio - 1) * 100
+            #   ((1                      - transaction_fee * self.config.SCOUT_MULTIPLIER) * current2possible_ratio / pair.ratio - 1) * 100
+            #
+            #  short:
+            #
+            #   ((1 - transaction_fee * self.config.SCOUT_MULTIPLIER) * current2possible_ratio / pair.ratio - 1) * 100
+            #
+            #  from: https://github.com/edeng23/binance-trade-bot/issues/385
+            #
+
+            ######  Margin formula: #####
+            #
+            #   ((1 - transaction_fee) * current2possible_ratio / pair.ratio - 1) * 100 - self.config.SCOUT_MARGIN
+            #
+            #  from: https://github.com/edeng23/binance-trade-bot/pull/417/files#diff-d2579cf2f5170dacac5d1dbfa2ac255210dbd8fba50b28aa04cbee38aed1e9fbR138
+            #
+
+            if self.config.USE_MARGIN:
+                ratio_dict[pair] = ((1 - transaction_fee) * current2possible_ratio / pair.ratio - 1) * 100 - self.config.SCOUT_MARGIN
+            else:
+                ratio_dict[pair] = ((1 - transaction_fee * self.config.SCOUT_MULTIPLIER) * current2possible_ratio / pair.ratio - 1) * 100
+
 
             d = RatioDebug()
             d.from_coin_price_now = coin_price
