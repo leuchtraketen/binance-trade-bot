@@ -100,7 +100,7 @@ class Strategy(AutoTrader):
 
     def re_initialize_trade_thresholds(self):
         """
-        Re-initialize all the thresholds ( hard reset - as deleting db )
+        Update all the ratios a bit (image we jumped to every coin once and saved the current price in the weighted ratio, but just as a 1/Nth of the ratio with N = RATIO_ADJUST_WEIGHT)
         """
         #updates all ratios
         #print('************INITIALIZING RATIOS**********')
@@ -129,8 +129,8 @@ class Strategy(AutoTrader):
                     # )
                     continue
 
-                if pair.ratio is None:
-                    continue
+                if not pair.ratio:
+                    pair.ratio = from_coin_price / to_coin_price
 
                 pair.ratio = (pair.ratio * self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
                 pair.from_coin_price = from_coin_price
@@ -174,11 +174,11 @@ class Strategy(AutoTrader):
                         price = float(result[1])
                         price_history[from_coin_symbol].append(price)
 
-                for pair in group:                  
+                for pair in group:
                     to_coin_symbol = pair.to_coin.symbol
                     if to_coin_symbol not in price_history.keys():
                         price_history[to_coin_symbol] = []
-                        for result in self.manager.binance_client.get_historical_klines(f"{to_coin_symbol}{self.config.BRIDGE_SYMBOL}", "1m", start_date_str, end_date_str, limit=init_weight*2):                           
+                        for result in self.manager.binance_client.get_historical_klines(f"{to_coin_symbol}{self.config.BRIDGE_SYMBOL}", "1m", start_date_str, end_date_str, limit=init_weight*2):
                            price = float(result[1])
                            price_history[to_coin_symbol].append(price)
 
@@ -189,7 +189,7 @@ class Strategy(AutoTrader):
                     if len(price_history[to_coin_symbol]) != init_weight*2:
                         self.logger.info(f"Skip initialization. Could not fetch last {init_weight * 2} prices for {to_coin_symbol}")
                         continue
-                    
+
                     sma_ratio = 0.0
                     for i in range(init_weight):
                         sma_ratio += price_history[from_coin_symbol][i] / price_history[to_coin_symbol][i]
