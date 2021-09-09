@@ -62,6 +62,12 @@ def main():
         return
     trader = strategy(manager, db, logger, config)
     logger.info(f"Chosen strategy: {config.STRATEGY}")
+
+    if config.USE_MARGIN:
+        logger.warning(f"Use scout margin: {config.SCOUT_MARGIN} %")
+    else:
+        logger.warning(f"Use scout multiplier: {config.SCOUT_MULTIPLIER}")
+
     if config.ENABLE_PAPER_TRADING:
         logger.warning("RUNNING IN PAPER-TRADING MODE")
     else:

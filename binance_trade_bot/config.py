@@ -22,7 +22,10 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         config["DEFAULT"] = {
             "bridge": "USDT",
             "scout_multiplier": "5",
+            "scout_margin": "0.8",
             "scout_sleep_time": "5",
+            "scout_debug":"true",
+            "use_margin":"true",
             "hourToKeepScoutHistory": "1",
             "tld": "com",
             "trade_fee": "auto",
@@ -40,7 +43,6 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "ratio_adjust_weight":"100",
             "auto_adjust_bnb_balance": "false",
             "auto_adjust_bnb_balance_rate": "3",
-            "scout_debug":"true",
             "trailing_stop":"true",
             "trailing_stop_coin_price_multiplier_init":"0.9965",
             "trailing_stop_coin_price_multiplier": "0.9955",
@@ -67,6 +69,9 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         # Get config for scout
         self.SCOUT_MULTIPLIER = float(
             os.environ.get("SCOUT_MULTIPLIER") or config.get(USER_CFG_SECTION, "scout_multiplier")
+        )
+        self.SCOUT_MARGIN = float(
+            os.environ.get("SCOUT_MARGIN") or config.get(USER_CFG_SECTION, "scout_margin")
         )
         self.SCOUT_SLEEP_TIME = int(
             os.environ.get("SCOUT_SLEEP_TIME") or config.get(USER_CFG_SECTION, "scout_sleep_time")
@@ -107,6 +112,8 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.STRATEGY = os.environ.get("STRATEGY") or config.get(USER_CFG_SECTION, "strategy")
 
         self.SCOUT_DEBUG = str(os.environ.get("SCOUT_DEBUG") or config.get(USER_CFG_SECTION, "scout_debug")).lower() == "true"
+
+        self.USE_MARGIN = str(os.environ.get("USE_MARGIN") or config.get(USER_CFG_SECTION, "use_margin")).lower() == "true"
 
         enable_paper_trading_str = os.environ.get("ENABLE_PAPER_TRADING") or config.get(USER_CFG_SECTION, "enable_paper_trading")
         self.ENABLE_PAPER_TRADING = enable_paper_trading_str == "true" or enable_paper_trading_str == "True"
