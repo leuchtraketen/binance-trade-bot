@@ -152,7 +152,7 @@ class Strategy(AutoTrader):
 
             init_weight = self.config.RATIO_ADJUST_WEIGHT
 
-            #Binance api allows retrieving max 1000 candles
+            # Binance api allows retrieving max 1000 candles
             if init_weight > 500:
                 init_weight = 500
 
@@ -170,7 +170,7 @@ class Strategy(AutoTrader):
 
                 if from_coin_symbol not in price_history.keys():
                     price_history[from_coin_symbol] = []
-                    for result in  self.manager.binance_client.get_historical_klines(f"{from_coin_symbol}{self.config.BRIDGE_SYMBOL}", "1m", start_date_str, end_date_str, limit=init_weight*2):
+                    for result in self.manager.binance_client.get_historical_klines(f"{from_coin_symbol}{self.config.BRIDGE_SYMBOL}", "1m", start_date_str, end_date_str, limit=init_weight*2):
                         price = float(result[1])
                         price_history[from_coin_symbol].append(price)
 
