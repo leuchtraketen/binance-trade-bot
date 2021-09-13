@@ -132,14 +132,14 @@ class Strategy(AutoTrader):
 
                 new_ratio = (pair.ratio * self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
 
-                self.logger.info(f"re-initialize: update ratio for pair {pair.from_coin} {pair.to_coin} from {pair.ratio} to {new_ratio}", notification=False)
+#                self.logger.info(f"re-initialize: update ratio for pair {pair.from_coin} {pair.to_coin} from {pair.ratio} to {new_ratio}", notification=False)
 
                 pair.ratio = new_ratio
                 pair.from_coin_price = from_coin_price
                 pair.to_coin_price = to_coin_price
 
-        stacktrace = traceback.format_stack()
-        self.logger.info(f"stacktrace: {stacktrace}")
+#        stacktrace = traceback.format_stack()
+#        self.logger.info(f"stacktrace: {stacktrace}")
 
     def initialize_trade_thresholds(self):
         """
