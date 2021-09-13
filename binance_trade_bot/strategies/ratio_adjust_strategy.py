@@ -188,9 +188,9 @@ class Strategy(AutoTrader):
                            price_history[to_coin_symbol].append(price)
 
                     while len(price_history[from_coin_symbol]) < init_weight*2:
-                        price_history[from_coin_symbol].insert(0, price_history[from_coin_symbol][0])
+                        price_history[from_coin_symbol].insert(0, sum(price_history[from_coin_symbol]) / len(price_history[from_coin_symbol]))
                     while len(price_history[to_coin_symbol]) < init_weight*2:
-                        price_history[to_coin_symbol].insert(0, price_history[to_coin_symbol][0])
+                        price_history[to_coin_symbol].insert(0, sum(price_history[to_coin_symbol]) / len(price_history[to_coin_symbol]))
 
                     if len(price_history[from_coin_symbol]) != init_weight*2:
                         self.logger.info(len(price_history[from_coin_symbol]))
