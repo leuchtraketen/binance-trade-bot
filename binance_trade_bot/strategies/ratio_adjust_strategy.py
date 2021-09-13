@@ -1,6 +1,7 @@
 from collections import defaultdict
 import random
 import sys
+import traceback
 from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session, aliased
@@ -129,9 +130,16 @@ class Strategy(AutoTrader):
                 if not pair.ratio:
                     pair.ratio = from_coin_price / to_coin_price
 
-                pair.ratio = (pair.ratio * self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
+                new_ratio = (pair.ratio * self.config.RATIO_ADJUST_WEIGHT + from_coin_price / to_coin_price)  / (self.config.RATIO_ADJUST_WEIGHT + 1)
+
+                self.logger.info(f"re-initialize: update ratio for pair {pair.from_coin} {pair.to_coin} from {pair.ratio} to {new_ratio}", notification=False)
+
+                pair.ratio = new_ratio
                 pair.from_coin_price = from_coin_price
                 pair.to_coin_price = to_coin_price
+
+        stacktrace = traceback.format_stack()
+        self.logger.info(f"stacktrace: {stacktrace}")
 
     def initialize_trade_thresholds(self):
         """
@@ -179,12 +187,17 @@ class Strategy(AutoTrader):
                            price = float(result[1])
                            price_history[to_coin_symbol].append(price)
 
+                    while len(price_history[from_coin_symbol]) < init_weight*2:
+                        price_history[from_coin_symbol].insert(0, price_history[from_coin_symbol][0])
+                    while len(price_history[to_coin_symbol]) < init_weight*2:
+                        price_history[to_coin_symbol].insert(0, price_history[to_coin_symbol][0])
+
                     if len(price_history[from_coin_symbol]) != init_weight*2:
                         self.logger.info(len(price_history[from_coin_symbol]))
-                        self.logger.info(f"Skip initialization. Could not fetch last {init_weight * 2} prices for {from_coin_symbol}")
+                        self.logger.info(f"Skip initialization. Could not fetch last {init_weight * 2} prices for {from_coin_symbol}, only {len(price_history[from_coin_symbol])}")
                         continue
                     if len(price_history[to_coin_symbol]) != init_weight*2:
-                        self.logger.info(f"Skip initialization. Could not fetch last {init_weight * 2} prices for {to_coin_symbol}")
+                        self.logger.info(f"Skip initialization. Could not fetch last {init_weight * 2} prices for {to_coin_symbol}, only {en(price_history[to_coin_symbol])}")
                         continue
 
                     sma_ratio = 0.0
@@ -195,6 +208,8 @@ class Strategy(AutoTrader):
                     cumulative_ratio = sma_ratio
                     for i in range(init_weight, init_weight * 2):
                         cumulative_ratio = (cumulative_ratio * init_weight + price_history[from_coin_symbol][i] / price_history[to_coin_symbol][i]) / (init_weight + 1)
+
+                    self.logger.info(f"initialize: init ratio for pair {pair.from_coin} {pair.to_coin} from {pair.ratio} to {cumulative_ratio}", notification=False)
 
                     pair.ratio = cumulative_ratio
 
