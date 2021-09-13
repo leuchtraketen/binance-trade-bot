@@ -86,7 +86,6 @@ def main():
 
     schedule = SafeScheduler(logger)
     schedule.every(config.SCOUT_SLEEP_TIME).seconds.do(trader.scout).tag("scouting")
-    schedule.every(15).seconds.do(trader.track_last_prices).tag("track last prices")
 
     #if config.SUPPORTED_COINS_METHOD == 'auto':
     #    schedule.every(10).minutes.do(db.set_coins, symbols=auto_coin_selector.get_coins_to_trade()).tag("update supported coins")

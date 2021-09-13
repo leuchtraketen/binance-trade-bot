@@ -40,9 +40,6 @@ class AutoTrader:
         self.config = config
         self.failed_buy_order = False
 
-        self.last_prices = {}
-        self.last_trade = None
-
         self.trailing_stop = None
         self.allow_trade = not self.config.TRAILING_STOP
 
@@ -50,7 +47,6 @@ class AutoTrader:
 
     def initialize(self):
         self.initialize_trade_thresholds()
-        self.track_last_prices()
 
     def transaction_through_bridge(self, pair: Pair, sell_price: float, buy_price: float):
         """
@@ -341,14 +337,14 @@ class AutoTrader:
 
                     if self.trailing_stop is None:
                         self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
-                        self.trailing_stop_timeout = time.time()+120 # init with a lower timeout, if there is movement, the timeout will be set to a higher value
+                        self.trailing_stop_timeout = time.time()+60 # init with a lower timeout, if there is movement, the timeout will be set to a higher value
                         self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                         self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
                     if trailing_stop_price >= self.trailing_stop:
                         self.trailing_stop = trailing_stop_price
-                        self.trailing_stop_timeout = time.time()+240
+                        self.trailing_stop_timeout = time.time()+180
                         print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}                             ", end="\n")
                     else:
                         if coin_price <= self.trailing_stop:
@@ -438,35 +434,3 @@ class AutoTrader:
             cv = CoinValue(coin, balance, usd_value, btc_value, datetime=now)
             cv_batch.append(cv)
         self.db.batch_update_coin_values(cv_batch)
-
-
-    # not used
-    def track_last_prices(self):
-        """
-        Log current value state of all altcoin balances against BTC and USDT in var.
-        """
-
-        coins = self.db.get_coins(True)
-        for coin in coins:
-            balance = self.manager.get_currency_balance(coin.symbol)
-            if balance == 0:
-                continue
-            usd_value = self.manager.get_ticker_price(coin + self.config.BRIDGE_SYMBOL)
-            btc_value = self.manager.get_ticker_price(coin + "BTC")
-
-            if coin + self.config.BRIDGE_SYMBOL not in self.last_prices:
-                self.last_prices[coin + self.config.BRIDGE_SYMBOL] = [usd_value]
-            else:
-                self.last_prices[coin + self.config.BRIDGE_SYMBOL].append(usd_value)
-
-            if coin + "BTC" not in self.last_prices:
-                self.last_prices[coin + "BTC"] = [btc_value]
-            else:
-                self.last_prices[coin + "BTC"].append(btc_value)
-
-            # keep just the 10 last values
-            if len(self.last_prices[coin + self.config.BRIDGE_SYMBOL]) == 11:
-                del self.last_prices[coin + self.config.BRIDGE_SYMBOL][0]
-
-            if len(self.last_prices[coin + "BTC"]) == 11:
-                del self.last_prices[coin + "BTC"][0]
