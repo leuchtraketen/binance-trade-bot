@@ -156,7 +156,7 @@ class AutoTrader:
             simulated_coin_price = coin_price
 
         if log:
-            print(f"simulated sell price: {simulated_coin_price}", end="\n")
+            self.logger.info(f"simulated sell price: {simulated_coin_price}", notification=False)
 
 
         return simulated_coin_price
@@ -311,25 +311,25 @@ class AutoTrader:
         pretend a lower coin price of given coin to determine if jump would still be profitable
         """
 
-        print(f"current {Fore.MAGENTA}{coin}{Style.RESET_ALL} price: {Back.BLACK}{Fore.WHITE}{Style.BRIGHT} {coin_price} {Style.RESET_ALL} {self.config.BRIDGE}", end="\n")
-        print(f"trailing stop: {Fore.CYAN if self.trailing_stop is not None else Fore.RED}{self.trailing_stop}{Style.RESET_ALL}", end="\n")
-        
+        self.logger.info(f"current {Fore.MAGENTA}{coin}{Style.RESET_ALL} price: {Back.BLACK}{Fore.WHITE}{Style.BRIGHT} {coin_price} {Style.RESET_ALL} {self.config.BRIDGE}", notification=False)
+        self.logger.info(f"trailing stop: {Fore.CYAN if self.trailing_stop is not None else Fore.RED}{self.trailing_stop}{Style.RESET_ALL}", notification=False)
+
         if self.trailing_stop_timeout is not None:
-            print(f"trailing stop timeout in: {str(self.trailing_stop_timeout-time.time()) + 's'}", end="\n")
+            self.logger.info(f"trailing stop timeout in: {str(self.trailing_stop_timeout-time.time()) + 's'}", notification=False)
 
         ratio_dict_all, prices, ratio_debug = self._get_ratios(coin, self._get_simulated_coin_price(coin_price, True), excluded_coins)
 
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
 
-        if self.config.TRAILING_STOP:                
+        if self.config.TRAILING_STOP:
 
             # if we have any viable options, pick the one with the biggest ratio
             if ratio_dict:
 
                 best_pair = max(ratio_dict, key=ratio_dict.get)
 
-                print(f"{best_pair}", end="\n")
+                self.logger.info(f"best pair = {best_pair}", notification=False)
 
                 if self.allow_trade == False:
 
@@ -345,7 +345,7 @@ class AutoTrader:
                     if trailing_stop_price >= self.trailing_stop:
                         self.trailing_stop = trailing_stop_price
                         self.trailing_stop_timeout = time.time()+180
-                        print(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}                             ", end="\n")
+                        self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}", notification=False)
                     else:
                         if coin_price <= self.trailing_stop:
                             self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
@@ -356,7 +356,7 @@ class AutoTrader:
                                 self.allow_trade = True
                                 self.logger.info(f"{coin}: TRAILING STOP TIMEOUT REACHED!")
 
-                            print(f"{coin}: current price: {coin_price}. trailing stop: {self.trailing_stop} {self.config.BRIDGE}                                  ", end="\n")
+                            self.logger.info(f"{coin}: current price: {coin_price}. trailing stop: {self.trailing_stop} {self.config.BRIDGE}", notification=False)
 
                     return
 
@@ -384,7 +384,7 @@ class AutoTrader:
             # if we have any viable options, pick the one with the biggest ratio
             if ratio_dict:
                 best_pair = max(ratio_dict, key=ratio_dict.get)
-                print(f"{best_pair}", end="\n")
+                self.logger.info(f"best pair = {best_pair}", notification=False)
                 self.logger.info(f"Jumping from {coin} to <{best_pair.to_coin_id}>")
                 self.transaction_through_bridge(best_pair, coin_price, prices[best_pair.to_coin_id])
 
