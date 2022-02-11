@@ -442,14 +442,14 @@ class AutoTrader:
 
                     if self.trailing_stop is None:
                         self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
-                        self.trailing_stop_timeout = time.time() + 12  # init with a lower timeout, if there is movement, the timeout will be set to a higher value
+                        self.trailing_stop_timeout = time.time() + 120  # init with a lower timeout, if there is movement, the timeout will be set to a higher value
                         self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                         self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
                     if trailing_stop_price >= self.trailing_stop:
                         self.trailing_stop = trailing_stop_price
-                        self.trailing_stop_timeout = time.time() + 2  # 240
+                        self.trailing_stop_timeout = time.time() + 240
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}", notification=False)
                     else:
                         if coin_price <= self.trailing_stop:
