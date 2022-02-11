@@ -1,3 +1,4 @@
+import math
 from collections import defaultdict
 from datetime import datetime
 from typing import Dict, List
@@ -60,15 +61,39 @@ class AutoTrader:
         balance = self.manager.get_currency_balance(pair.from_coin.symbol)
 
         if balance and balance * sell_price > self.manager.get_min_notional(
-            pair.from_coin.symbol, self.config.BRIDGE.symbol
+                pair.from_coin.symbol, self.config.BRIDGE.symbol
         ):
             can_sell = True
         else:
             self.logger.info("Skipping sell")
 
-        if can_sell and self.manager.sell_alt(pair.from_coin, self.config.BRIDGE, sell_price) is None:
-            self.logger.info("Couldn't sell, going back to scouting mode...")
-            return None
+        min_balance_bridge_transfer_main2funding = 50
+        max_balance_bridge_transfer_main2funding = 100
+        min_balance_bridge_transfer_funding2main = 50
+        max_balance_bridge_transfer_funding2main = 100
+
+        if can_sell:
+            did_sell_succeed = self.manager.sell_alt(pair.from_coin, self.config.BRIDGE, sell_price) is not None
+            if not did_sell_succeed:
+                self.logger.info("Couldn't sell, going back to scouting mode...")
+                return None
+
+            balance_bridge_main = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
+
+            if balance_bridge_main >= min_balance_bridge_transfer_main2funding:
+                balance_bridge_main2funding = min(balance_bridge_main, max_balance_bridge_transfer_main2funding)
+
+                self.logger.info(
+                    f"Funding: transfer {balance_bridge_main2funding} of {balance_bridge_main} {self.config.BRIDGE.symbol} from MAIN to FUNDING (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
+                )
+                time.sleep(2)
+                self.manager.transferMainToFunding(balance_bridge_main2funding, self.config.BRIDGE.symbol)
+                time.sleep(2)
+
+                balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                self.logger.info(
+                    f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                )
 
         result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE, buy_price)
         if result is not None:
@@ -79,11 +104,62 @@ class AutoTrader:
 
             self.update_trade_threshold(pair.to_coin, price)
             self.failed_buy_order = False
-            return result
 
-        self.logger.info("Couldn't buy, going back to scouting mode...")
-        self.failed_buy_order = True
-        return None
+            ratio_dict_all, prices, ratio_debug = self._get_ratios(pair.to_coin,
+                                                                   self._get_simulated_coin_price(buy_price, True),
+                                                                   [])
+            ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
+            if ratio_dict:
+                ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
+                if self.config.SCOUT_DEBUG:
+                    s = ""
+                    sep = ""
+                    for f_pair, f_ratio in reversed(
+                            {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                        f_ratio_rounded = round(f_ratio, 5)
+                        f_ratio_debug = ratio_debug[f_pair]
+                        s += sep
+                        s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                        sep = ", "
+
+                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                    self.logger.info(
+                        f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                    )
+                    self.logger.info(
+                        f"Funding: we want to jump into {s} immediately after buying {pair.to_coin}... leave {balance_bridge_funding} {self.config.BRIDGE.symbol} in FUNDING"
+                    )
+            else:
+                balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                if balance_bridge_funding >= min_balance_bridge_transfer_funding2main:
+                    balance_bridge_funding2main = min(balance_bridge_funding, max_balance_bridge_transfer_funding2main)
+
+                    self.logger.info(
+                        f"Funding: transfer {balance_bridge_funding2main} of {balance_bridge_funding} {self.config.BRIDGE.symbol} from FUNDING to MAIN (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
+                    )
+                    time.sleep(2)
+                    self.manager.transferFundingToMain(balance_bridge_funding2main, self.config.BRIDGE.symbol)
+                    time.sleep(2)
+
+                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                    self.logger.info(
+                        f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                    )
+                    result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE, buy_price)
+                    if result is not None:
+                        self.logger.info(
+                            f"Buying {pair.to_coin} with money from FUNDING was successful."
+                        )
+                    else:
+                        self.logger.info(
+                            f"Couldn't buy {pair.to_coin} with money from FUNDING. going back to scouting mode..."
+                        )
+                        self.failed_buy_order = True
+
+
+        else:
+            self.logger.info(f"Couldn't buy {pair.to_coin}, going back to scouting mode...")
+            self.failed_buy_order = True
 
     def update_trade_threshold(self, coin: Coin, coin_price: float):
         """
@@ -341,14 +417,14 @@ class AutoTrader:
 
                     if self.trailing_stop is None:
                         self.trailing_stop = coin_price * self.config.TRAILING_STOP_COIN_PRICE_MULTIPLIER_INIT
-                        self.trailing_stop_timeout = time.time()+120 # init with a lower timeout, if there is movement, the timeout will be set to a higher value
+                        self.trailing_stop_timeout = time.time() + 12  # init with a lower timeout, if there is movement, the timeout will be set to a higher value
                         self.logger.info(f"Will probably jump from {coin} to <{best_pair.to_coin.symbol}>")
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}")
                         self.logger.info(f"{coin}: trailing stop: {self.trailing_stop} {self.config.BRIDGE}") # prozentualen abstand anzeigen?
 
                     if trailing_stop_price >= self.trailing_stop:
                         self.trailing_stop = trailing_stop_price
-                        self.trailing_stop_timeout = time.time()+240
+                        self.trailing_stop_timeout = time.time() + 2  # 240
                         self.logger.info(f"{coin}: current price: {coin_price} {self.config.BRIDGE}. trailing stop: {self.trailing_stop} {self.config.BRIDGE} {Back.BLUE}{Fore.CYAN}{Style.BRIGHT} ↑↑↑ {Style.RESET_ALL}", notification=False)
                     else:
                         if coin_price <= self.trailing_stop:

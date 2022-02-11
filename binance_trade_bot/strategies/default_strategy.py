@@ -2,7 +2,11 @@ import random
 import sys
 from datetime import datetime
 
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql.expression import and_
+
 from binance_trade_bot.auto_trader import AutoTrader
+from binance_trade_bot.database import Pair, Coin
 
 
 class Strategy(AutoTrader):
@@ -29,6 +33,34 @@ class Strategy(AutoTrader):
         # stopped. Not logging though to reduce log size.
         log_str_candidates = self._get_jump_candidate_log(current_coin, current_coin_price)
         self.logger.info(f"{current_coin}: {log_str_candidates}", notification=False)
+
+        #######################
+
+        pair = None
+        for p in self.db.get_pairs_from(current_coin):
+            if p.from_coin.symbol == current_coin.symbol and p.to_coin == self.config.BRIDGE:
+                pair = p
+
+        if pair is not None:
+            balance_bridge_main = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
+
+            min_balance_bridge_transfer_main2funding = 0
+            max_balance_bridge_transfer_main2funding = 100
+
+            if balance_bridge_main >= min_balance_bridge_transfer_main2funding:
+                balance_bridge_main2funding = min(balance_bridge_main, max_balance_bridge_transfer_main2funding)
+
+                self.logger.info(
+                    f"XXX TEST Funding: transfer {balance_bridge_main2funding} of {balance_bridge_main} {self.config.BRIDGE.symbol} from MAIN to FUNDING (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
+                )
+                # self.manager.transferMainToFunding(balance_bridge_main2funding, self.config.BRIDGE.symbol)
+
+                balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                self.logger.info(
+                    f"XXX TEST Funding: balance {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                )
+
+        ###########################
 
         self._jump_to_best_coin(current_coin, current_coin_price)
 
