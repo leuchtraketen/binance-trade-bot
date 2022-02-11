@@ -71,6 +71,8 @@ class AutoTrader:
         max_balance_bridge_transfer_main2funding = self.config.MAX_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING
         min_balance_bridge_transfer_funding2main = self.config.MIN_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN
         max_balance_bridge_transfer_funding2main = self.config.MAX_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN
+        min_balance_bridge_main_during_jump = self.config.MIN_BALANCE_BRIDGE_MAIN_DURING_JUMP
+        min_balance_bridge_funding_after_jump = self.config.MIN_BALANCE_BRIDGE_FUNDING_AFTER_JUMP
 
         if can_sell:
             did_sell_succeed = self.manager.sell_alt(pair.from_coin, self.config.BRIDGE, sell_price) is not None
@@ -80,8 +82,9 @@ class AutoTrader:
 
             balance_bridge_main = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
 
-            if balance_bridge_main >= min_balance_bridge_transfer_main2funding:
-                balance_bridge_main2funding = min(balance_bridge_main, max_balance_bridge_transfer_main2funding)
+            if balance_bridge_main >= min_balance_bridge_transfer_main2funding + min_balance_bridge_main_during_jump:
+                balance_bridge_main2funding = min(balance_bridge_main - min_balance_bridge_main_during_jump,
+                                                  max_balance_bridge_transfer_main2funding)
 
                 self.logger.info(
                     f"Funding: transfer {balance_bridge_main2funding} of {balance_bridge_main} {self.config.BRIDGE.symbol} from MAIN to FUNDING (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
@@ -131,8 +134,9 @@ class AutoTrader:
                     )
             else:
                 balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-                if balance_bridge_funding >= min_balance_bridge_transfer_funding2main:
-                    balance_bridge_funding2main = min(balance_bridge_funding, max_balance_bridge_transfer_funding2main)
+                if balance_bridge_funding >= min_balance_bridge_transfer_funding2main + min_balance_bridge_funding_after_jump:
+                    balance_bridge_funding2main = min(balance_bridge_funding - min_balance_bridge_funding_after_jump,
+                                                      max_balance_bridge_transfer_funding2main)
 
                     self.logger.info(
                         f"Funding: transfer {balance_bridge_funding2main} of {balance_bridge_funding} {self.config.BRIDGE.symbol} from FUNDING to MAIN (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"

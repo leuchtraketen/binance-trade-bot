@@ -50,10 +50,12 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "supported_coins_method": "list",
             "auto_coin_selector_min_volume": "80000000",
             "auto_coin_selector_add_coins_from_list": "True",
-            "min_balance_bridge_transfer_main2funding": "50",
-            "max_balance_bridge_transfer_main2funding": "1000",
-            "min_balance_bridge_transfer_funding2main": "50",
-            "max_balance_bridge_transfer_funding2main": "1000",
+            "min_balance_bridge_transfer_main2funding": "10",
+            "max_balance_bridge_transfer_main2funding": "10000",
+            "min_balance_bridge_transfer_funding2main": "10",
+            "max_balance_bridge_transfer_funding2main": "10000",
+            "min_balance_bridge_main_during_jump": "50",
+            "min_balance_bridge_funding_after_jump": "50",
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -104,6 +106,14 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.MAX_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN = int(
             os.environ.get("MAX_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN") or config.get(USER_CFG_SECTION,
                                                                                      "max_balance_bridge_transfer_funding2main")
+        )
+        self.MIN_BALANCE_BRIDGE_MAIN_DURING_JUMP = int(
+            os.environ.get("MIN_BALANCE_BRIDGE_MAIN_DURING_JUMP") or config.get(USER_CFG_SECTION,
+                                                                                "min_balance_bridge_main_during_jump")
+        )
+        self.MIN_BALANCE_BRIDGE_FUNDING_AFTER_JUMP = int(
+            os.environ.get("MIN_BALANCE_BRIDGE_FUNDING_AFTER_JUMP") or config.get(USER_CFG_SECTION,
+                                                                                  "min_balance_bridge_funding_after_jump")
         )
 
         # Get config for binance
