@@ -56,7 +56,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "min_balance_bridge_transfer_funding2main": "10",
             "max_balance_bridge_transfer_funding2main": "10000",
             "min_balance_bridge_main_during_jump": "50",
-            "min_balance_bridge_funding_after_jump": "50",
+            "min_balance_bridge_funding_after_jump": "0",
         }
 
         if not os.path.exists(CFG_FL_NAME):

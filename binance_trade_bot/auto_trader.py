@@ -133,24 +133,23 @@ class AutoTrader:
                 if ratio_dict:
                     # leave bridge coin in funding wallet
                     ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
-                    if self.config.SCOUT_DEBUG:
-                        s = ""
-                        sep = ""
-                        for f_pair, f_ratio in reversed(
-                                {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
-                            f_ratio_rounded = round(f_ratio, 5)
-                            f_ratio_debug = ratio_debug[f_pair]
-                            s += sep
-                            s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
-                            sep = ", "
+                    s = ""
+                    sep = ""
+                    for f_pair, f_ratio in reversed(
+                            {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                        f_ratio_rounded = round(f_ratio, 5)
+                        f_ratio_debug = ratio_debug[f_pair]
+                        s += sep
+                        s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                        sep = ", "
 
-                        balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-                        self.logger.info(
-                            f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
-                        )
-                        self.logger.info(
-                            f"Funding: we want to jump into {s} immediately after buying {pair.to_coin}... leave {balance_bridge_funding} {self.config.BRIDGE.symbol} in FUNDING"
-                        )
+                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                    self.logger.info(
+                        f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                    )
+                    self.logger.info(
+                        f"Funding: we want to jump into {s} immediately after buying {pair.to_coin}... leave {balance_bridge_funding} {self.config.BRIDGE.symbol} in FUNDING"
+                    )
                 else:
                     # get bridge coin back from funding wallet
                     balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
@@ -177,9 +176,8 @@ class AutoTrader:
                             )
                         else:
                             self.logger.info(
-                                f"Couldn't buy {pair.to_coin} with money from FUNDING. going back to scouting mode..."
+                                f"Couldn't buy {pair.to_coin} with money from FUNDING."
                             )
-                            self.failed_buy_order = True
 
 
         else:
