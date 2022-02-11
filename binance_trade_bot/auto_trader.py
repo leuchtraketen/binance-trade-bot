@@ -80,23 +80,39 @@ class AutoTrader:
                 self.logger.info("Couldn't sell, going back to scouting mode...")
                 return None
 
+            if self.config.USE_FUNDING_WALLET:
+                # store bridge coin on funding wallet
+                balance_bridge_main = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
+
+                if balance_bridge_main >= min_balance_bridge_transfer_main2funding + min_balance_bridge_main_during_jump:
+                    balance_bridge_main2funding = min(balance_bridge_main - min_balance_bridge_main_during_jump,
+                                                      max_balance_bridge_transfer_main2funding)
+
+                    self.logger.info(
+                        f"Funding: transfer {balance_bridge_main2funding} of {balance_bridge_main} {self.config.BRIDGE.symbol} from MAIN to FUNDING (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
+                    )
+                    time.sleep(2)
+                    self.manager.transferMainToFunding(balance_bridge_main2funding, self.config.BRIDGE.symbol)
+                    time.sleep(2)
+
+                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                    self.logger.info(
+                        f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                    )
+
+        if self.config.USE_FUNDING_WALLET:
+            # if for some reason there was no sell and there is no bridge coin on main wallet but there is some on funding wallet, transfer a minimum amount to main wallet
             balance_bridge_main = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
-
-            if balance_bridge_main >= min_balance_bridge_transfer_main2funding + min_balance_bridge_main_during_jump:
-                balance_bridge_main2funding = min(balance_bridge_main - min_balance_bridge_main_during_jump,
-                                                  max_balance_bridge_transfer_main2funding)
+            balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+            if balance_bridge_main < 50 and balance_bridge_funding > 50 and balance_bridge_funding >= min_balance_bridge_transfer_funding2main:
+                balance_bridge_funding2main = max(50, min_balance_bridge_transfer_funding2main)
 
                 self.logger.info(
-                    f"Funding: transfer {balance_bridge_main2funding} of {balance_bridge_main} {self.config.BRIDGE.symbol} from MAIN to FUNDING (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
+                    f"Funding: EMPTY MAIN WALLET BUT FULL FUNDING WALLET. transfer {balance_bridge_funding2main} of {balance_bridge_funding} {self.config.BRIDGE.symbol} from FUNDING to MAIN (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
                 )
                 time.sleep(2)
-                self.manager.transferMainToFunding(balance_bridge_main2funding, self.config.BRIDGE.symbol)
+                self.manager.transferFundingToMain(balance_bridge_funding2main, self.config.BRIDGE.symbol)
                 time.sleep(2)
-
-                balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-                self.logger.info(
-                    f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
-                )
 
         result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE, buy_price)
         if result is not None:
@@ -108,57 +124,62 @@ class AutoTrader:
             self.update_trade_threshold(pair.to_coin, price)
             self.failed_buy_order = False
 
-            ratio_dict_all, prices, ratio_debug = self._get_ratios(pair.to_coin,
-                                                                   self._get_simulated_coin_price(buy_price, True),
-                                                                   [])
-            ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
-            if ratio_dict:
-                ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
-                if self.config.SCOUT_DEBUG:
-                    s = ""
-                    sep = ""
-                    for f_pair, f_ratio in reversed(
-                            {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
-                        f_ratio_rounded = round(f_ratio, 5)
-                        f_ratio_debug = ratio_debug[f_pair]
-                        s += sep
-                        s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
-                        sep = ", "
+            if self.config.USE_FUNDING_WALLET:
+                # check if bridge coin should be retrieved from funding wallet
+                ratio_dict_all, prices, ratio_debug = self._get_ratios(pair.to_coin,
+                                                                       self._get_simulated_coin_price(buy_price, True),
+                                                                       [])
+                ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
+                if ratio_dict:
+                    # leave bridge coin in funding wallet
+                    ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
+                    if self.config.SCOUT_DEBUG:
+                        s = ""
+                        sep = ""
+                        for f_pair, f_ratio in reversed(
+                                {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                            f_ratio_rounded = round(f_ratio, 5)
+                            f_ratio_debug = ratio_debug[f_pair]
+                            s += sep
+                            s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                            sep = ", "
 
-                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-                    self.logger.info(
-                        f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
-                    )
-                    self.logger.info(
-                        f"Funding: we want to jump into {s} immediately after buying {pair.to_coin}... leave {balance_bridge_funding} {self.config.BRIDGE.symbol} in FUNDING"
-                    )
-            else:
-                balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-                if balance_bridge_funding >= min_balance_bridge_transfer_funding2main + min_balance_bridge_funding_after_jump:
-                    balance_bridge_funding2main = min(balance_bridge_funding - min_balance_bridge_funding_after_jump,
-                                                      max_balance_bridge_transfer_funding2main)
-
-                    self.logger.info(
-                        f"Funding: transfer {balance_bridge_funding2main} of {balance_bridge_funding} {self.config.BRIDGE.symbol} from FUNDING to MAIN (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
-                    )
-                    time.sleep(2)
-                    self.manager.transferFundingToMain(balance_bridge_funding2main, self.config.BRIDGE.symbol)
-                    time.sleep(2)
-
-                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-                    self.logger.info(
-                        f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
-                    )
-                    result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE, buy_price)
-                    if result is not None:
+                        balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
                         self.logger.info(
-                            f"Buying {pair.to_coin} with money from FUNDING was successful."
+                            f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
                         )
-                    else:
                         self.logger.info(
-                            f"Couldn't buy {pair.to_coin} with money from FUNDING. going back to scouting mode..."
+                            f"Funding: we want to jump into {s} immediately after buying {pair.to_coin}... leave {balance_bridge_funding} {self.config.BRIDGE.symbol} in FUNDING"
                         )
-                        self.failed_buy_order = True
+                else:
+                    # get bridge coin back from funding wallet
+                    balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                    if balance_bridge_funding >= min_balance_bridge_transfer_funding2main + min_balance_bridge_funding_after_jump:
+                        balance_bridge_funding2main = min(
+                            balance_bridge_funding - min_balance_bridge_funding_after_jump,
+                            max_balance_bridge_transfer_funding2main)
+
+                        self.logger.info(
+                            f"Funding: transfer {balance_bridge_funding2main} of {balance_bridge_funding} {self.config.BRIDGE.symbol} from FUNDING to MAIN (jumping from {pair.from_coin.symbol} deep into {pair.to_coin.symbol})"
+                        )
+                        time.sleep(2)
+                        self.manager.transferFundingToMain(balance_bridge_funding2main, self.config.BRIDGE.symbol)
+                        time.sleep(2)
+
+                        balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
+                        self.logger.info(
+                            f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
+                        )
+                        result = self.manager.buy_alt(pair.to_coin, self.config.BRIDGE, buy_price)
+                        if result is not None:
+                            self.logger.info(
+                                f"Buying {pair.to_coin} with money from FUNDING was successful."
+                            )
+                        else:
+                            self.logger.info(
+                                f"Couldn't buy {pair.to_coin} with money from FUNDING. going back to scouting mode..."
+                            )
+                            self.failed_buy_order = True
 
 
         else:

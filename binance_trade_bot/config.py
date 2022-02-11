@@ -50,6 +50,7 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "supported_coins_method": "list",
             "auto_coin_selector_min_volume": "80000000",
             "auto_coin_selector_add_coins_from_list": "True",
+            "use_funding_wallet": "True",
             "min_balance_bridge_transfer_main2funding": "10",
             "max_balance_bridge_transfer_main2funding": "10000",
             "min_balance_bridge_transfer_funding2main": "10",
@@ -246,8 +247,14 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
         self.AUTO_COIN_SELECTOR_BLACKLIST = auto_coin_selector_blacklist
 
         self.AUTO_COIN_SELECTOR_MIN_VOLUME = float(
-            os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME") or config.get(USER_CFG_SECTION, "auto_coin_selector_min_volume")
+            os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME") or config.get(USER_CFG_SECTION,
+                                                                          "auto_coin_selector_min_volume")
         )
 
-        auto_coin_selector_add_coins_from_list_str = os.environ.get("AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST") or config.get(USER_CFG_SECTION, "auto_coin_selector_add_coins_from_list")
+        auto_coin_selector_add_coins_from_list_str = os.environ.get(
+            "AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST") or config.get(USER_CFG_SECTION,
+                                                                    "auto_coin_selector_add_coins_from_list")
         self.AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST = str(auto_coin_selector_add_coins_from_list_str).lower() == "true"
+
+        self.USE_FUNDING_WALLET = str(os.environ.get("USE_FUNDING_WALLET") or config.get(USER_CFG_SECTION,
+                                                                                         "use_funding_wallet")).lower() == "true"
