@@ -67,10 +67,10 @@ class AutoTrader:
         else:
             self.logger.info("Skipping sell")
 
-        min_balance_bridge_transfer_main2funding = 50
-        max_balance_bridge_transfer_main2funding = 100
-        min_balance_bridge_transfer_funding2main = 50
-        max_balance_bridge_transfer_funding2main = 100
+        min_balance_bridge_transfer_main2funding = self.config.MIN_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING
+        max_balance_bridge_transfer_main2funding = self.config.MAX_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING
+        min_balance_bridge_transfer_funding2main = self.config.MIN_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN
+        max_balance_bridge_transfer_funding2main = self.config.MAX_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN
 
         if can_sell:
             did_sell_succeed = self.manager.sell_alt(pair.from_coin, self.config.BRIDGE, sell_price) is not None

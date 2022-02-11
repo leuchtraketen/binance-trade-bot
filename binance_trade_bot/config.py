@@ -40,16 +40,20 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "price_type": self.PRICE_TYPE_ORDERBOOK,
             "accept_losses": "false",
             "max_idle_hours": "3",
-            "ratio_adjust_weight":"100",
+            "ratio_adjust_weight": "100",
             "auto_adjust_bnb_balance": "false",
             "auto_adjust_bnb_balance_rate": "3",
-            "trailing_stop":"true",
-            "trailing_stop_coin_price_multiplier_init":"0.9965",
+            "trailing_stop": "true",
+            "trailing_stop_coin_price_multiplier_init": "0.9965",
             "trailing_stop_coin_price_multiplier": "0.9955",
             "trailing_stop_ratio_calc_coin_price_multiplier": "0.9995",
             "supported_coins_method": "list",
             "auto_coin_selector_min_volume": "80000000",
-            "auto_coin_selector_add_coins_from_list": "True"
+            "auto_coin_selector_add_coins_from_list": "True",
+            "min_balance_bridge_transfer_main2funding": "50",
+            "max_balance_bridge_transfer_main2funding": "1000",
+            "min_balance_bridge_transfer_funding2main": "50",
+            "max_balance_bridge_transfer_funding2main": "1000",
         }
 
         if not os.path.exists(CFG_FL_NAME):
@@ -81,14 +85,33 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             os.environ.get("RATIO_ADJUST_WEIGHT") or config.get(USER_CFG_SECTION, "ratio_adjust_weight")
         )
 
+        self.RATIO_ADJUST_WEIGHT = int(
+            os.environ.get("RATIO_ADJUST_WEIGHT") or config.get(USER_CFG_SECTION, "ratio_adjust_weight")
+        )
+
+        self.MIN_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING = int(
+            os.environ.get("MIN_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING") or config.get(USER_CFG_SECTION,
+                                                                                     "min_balance_bridge_transfer_main2funding")
+        )
+        self.MAX_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING = int(
+            os.environ.get("MAX_BALANCE_BRIDGE_TRANSFER_MAIN2FUNDING") or config.get(USER_CFG_SECTION,
+                                                                                     "max_balance_bridge_transfer_main2funding")
+        )
+        self.MIN_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN = int(
+            os.environ.get("MIN_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN") or config.get(USER_CFG_SECTION,
+                                                                                     "min_balance_bridge_transfer_funding2main")
+        )
+        self.MAX_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN = int(
+            os.environ.get("MAX_BALANCE_BRIDGE_TRANSFER_FUNDING2MAIN") or config.get(USER_CFG_SECTION,
+                                                                                     "max_balance_bridge_transfer_funding2main")
+        )
+
         # Get config for binance
         self.BINANCE_API_KEY = os.environ.get("API_KEY") or config.get(USER_CFG_SECTION, "api_key")
         self.BINANCE_API_SECRET_KEY = os.environ.get("API_SECRET_KEY") or config.get(USER_CFG_SECTION, "api_secret_key")
         self.BINANCE_TLD = os.environ.get("TLD") or config.get(USER_CFG_SECTION, "tld")
 
-
         self.CURRENT_COIN_SYMBOL = os.environ.get("CURRENT_COIN_SYMBOL") or config.get(USER_CFG_SECTION, "current_coin")
-
 
         # Get supported coin list from the environment
         supported_coin_list = [

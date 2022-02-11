@@ -670,7 +670,7 @@ class BinanceAPIManager:
             f"Funding: balance result: {json.dumps(result)}"
         )
         for obj in result:
-            return obj["free"]
+            return float(obj["free"])
         return 0
 
 
