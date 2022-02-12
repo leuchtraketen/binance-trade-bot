@@ -49,6 +49,8 @@ class AutoTrader:
 
         self.trailing_stop_timeout = None
 
+        self.stored_bridge_coin_on_funding_wallet = False
+
     def initialize(self):
         self.initialize_trade_thresholds()
         self.track_last_prices()
@@ -99,6 +101,8 @@ class AutoTrader:
                     self.logger.info(
                         f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
                     )
+
+                    self.stored_bridge_coin_on_funding_wallet = True
 
         if self.config.USE_FUNDING_WALLET:
             # if for some reason there was no sell and there is no bridge coin on main wallet but there is some on funding wallet, transfer a minimum amount to main wallet
@@ -152,6 +156,7 @@ class AutoTrader:
                     )
                 else:
                     # get bridge coin back from funding wallet
+                    self.stored_bridge_coin_on_funding_wallet = False
                     balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
                     if balance_bridge_funding >= min_balance_bridge_transfer_funding2main + min_balance_bridge_funding_after_jump:
                         balance_bridge_funding2main = min(
@@ -425,7 +430,7 @@ class AutoTrader:
         # keep only ratios bigger than zero
         ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
 
-        if self.config.TRAILING_STOP:
+        if self.config.TRAILING_STOP and not self.stored_bridge_coin_on_funding_wallet:
 
             # if we have any viable options, pick the one with the biggest ratio
             if ratio_dict:
