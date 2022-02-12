@@ -145,7 +145,7 @@ class AutoTrader:
                     if f_ratio_rounded > best_ratio:
                         best_ratio = f_ratio_rounded
 
-                if best_ratio >= 5 or (best_ratio >= 2 and len(ratio_dict) >= 3):
+                if best_ratio >= 3 or (best_ratio >= 1 and len(ratio_dict) >= 3):
                     # leave bridge coin in funding wallet
                     balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
                     self.logger.info(
@@ -155,6 +155,11 @@ class AutoTrader:
                         f"Funding: we want to jump into {s} immediately after buying {pair.to_coin}... leave {balance_bridge_funding} {self.config.BRIDGE.symbol} in FUNDING"
                     )
                 else:
+                    if len(ratio_dict):
+                        self.logger.info(
+                            f"Funding: we want to jump deeep into {s} immediately after buying {pair.to_coin}, but the best ratio {best_ratio} is so low that this may change in a couple of seconds. So pull money from FUNDING walled."
+                        )
+
                     # get bridge coin back from funding wallet
                     balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
                     if balance_bridge_funding >= min_balance_bridge_transfer_funding2main + min_balance_bridge_funding_after_jump:
