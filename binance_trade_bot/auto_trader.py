@@ -136,6 +136,8 @@ class AutoTrader:
                 ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
                 if ratio_dict:
                     # leave bridge coin in funding wallet
+                    self.stored_bridge_coin_on_funding_wallet = True
+
                     ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
                     s = ""
                     sep = ""
@@ -157,6 +159,7 @@ class AutoTrader:
                 else:
                     # get bridge coin back from funding wallet
                     self.stored_bridge_coin_on_funding_wallet = False
+
                     balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
                     if balance_bridge_funding >= min_balance_bridge_transfer_funding2main + min_balance_bridge_funding_after_jump:
                         balance_bridge_funding2main = min(
