@@ -126,23 +126,27 @@ class AutoTrader:
 
             if self.config.USE_FUNDING_WALLET:
                 # check if bridge coin should be retrieved from funding wallet
+                best_ratio = 0
+
                 ratio_dict_all, prices, ratio_debug = self._get_ratios(pair.to_coin,
                                                                        self._get_simulated_coin_price(buy_price, True),
                                                                        [])
                 ratio_dict = {k: v for k, v in ratio_dict_all.items() if v > 0}
-                if ratio_dict:
-                    # leave bridge coin in funding wallet
-                    ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
-                    s = ""
-                    sep = ""
-                    for f_pair, f_ratio in reversed(
-                            {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
-                        f_ratio_rounded = round(f_ratio, 5)
-                        f_ratio_debug = ratio_debug[f_pair]
-                        s += sep
-                        s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
-                        sep = ", "
+                ratio_dict_all_sorted = {k: v for k, v in sorted(ratio_dict_all.items(), key=lambda item: item[1])}
+                s = ""
+                sep = ""
+                for f_pair, f_ratio in reversed(
+                        {k: ratio_dict_all_sorted[k] for k in list(ratio_dict_all_sorted)[-4:]}.items()):
+                    f_ratio_rounded = round(f_ratio, 5)
+                    f_ratio_debug = ratio_debug[f_pair]
+                    s += sep
+                    s += f"{f_pair.to_coin.symbol} ({f_ratio_rounded})"
+                    sep = ", "
+                    if f_ratio_rounded > best_ratio:
+                        best_ratio = f_ratio_rounded
 
+                if best_ratio >= 5 or (best_ratio >= 2 and len(ratio_dict) >= 3):
+                    # leave bridge coin in funding wallet
                     balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
                     self.logger.info(
                         f"Funding: balance is now {balance_bridge_funding} {self.config.BRIDGE.symbol}"
