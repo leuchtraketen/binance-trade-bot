@@ -104,7 +104,7 @@ class AutoTrader:
             # if for some reason there was no sell and there is no bridge coin on main wallet but there is some on funding wallet, transfer a minimum amount to main wallet
             balance_bridge_main = self.manager.get_currency_balance(self.config.BRIDGE.symbol)
             balance_bridge_funding = self.manager.getFundingBalance(self.config.BRIDGE.symbol)
-            if balance_bridge_main < 50 and balance_bridge_funding > 50 and balance_bridge_funding >= min_balance_bridge_transfer_funding2main:
+            if balance_bridge_main < 49 and balance_bridge_funding > 50 and balance_bridge_funding >= min_balance_bridge_transfer_funding2main:
                 balance_bridge_funding2main = max(50, min_balance_bridge_transfer_funding2main)
 
                 self.logger.info(
