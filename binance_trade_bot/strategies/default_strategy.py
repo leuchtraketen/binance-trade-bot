@@ -2,7 +2,11 @@ import random
 import sys
 from datetime import datetime
 
+from sqlalchemy.orm import Session, aliased
+from sqlalchemy.sql.expression import and_
+
 from binance_trade_bot.auto_trader import AutoTrader
+from binance_trade_bot.database import Pair, Coin
 
 
 class Strategy(AutoTrader):
