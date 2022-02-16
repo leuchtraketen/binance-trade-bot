@@ -636,24 +636,54 @@ class BinanceAPIManager:
             new_balance = self.get_currency_balance(origin_symbol, True)
 
         if not order.price:
-            order.price = order.cumulative_quote_qty/order_quantity
+            order.price = order.cumulative_quote_qty / order_quantity
 
-        self.logger.info(f"Sold {order_quantity} <{origin_symbol}> (price: {round(order.price, 4)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
+        self.logger.info(
+            f"Sold {order_quantity} <{origin_symbol}> (price: {round(order.price, 4)}) for a total of {order.cumulative_quote_qty} {target_symbol}")
 
         trade_log.set_complete(order.cumulative_quote_qty)
 
         return order
 
+    def transferMainToFunding(self, amount: float, asset: str):
+        params = {
+            "asset": asset,
+            "amount": float_as_decimal_str(amount),
+            "type": "MAIN_FUNDING"
+        }
+        return self.binance_client.make_universal_transfer(**params)
+
+    def transferFundingToMain(self, amount: float, asset: str):
+        params = {
+            "asset": asset,
+            "amount": float_as_decimal_str(amount),
+            "type": "FUNDING_MAIN"
+        }
+        return self.binance_client.make_universal_transfer(**params)
+
+    def getFundingBalance(self, asset: str):
+        params = {
+            "asset": asset,
+        }
+        result = self.binance_client._request_margin_api('post', 'asset/get-funding-asset', signed=True, data=params)
+        self.logger.info(
+            f"Funding: balance result: {json.dumps(result)}"
+        )
+        for obj in result:
+            return float(obj["free"])
+        return 0
+
+
 class PaperOrderBalanceManager(AbstractOrderBalanceManager):
     PERSIST_FILE_PATH = "data/paper_wallet.json"
 
     def __init__(
-        self,
-        bridge_symbol: str,
-        client: Client,
-        cache: BinanceCache,
-        initial_balances: Dict[str, float],
-        read_persist=True,
+            self,
+            bridge_symbol: str,
+            client: Client,
+            cache: BinanceCache,
+            initial_balances: Dict[str, float],
+            read_persist=True,
     ):
         self.manager: BinanceAPIManager = None
         self.balances = initial_balances
