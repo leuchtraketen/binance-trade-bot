@@ -49,7 +49,10 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
             "trailing_stop_ratio_calc_coin_price_multiplier": "0.9995",
             "supported_coins_method": "list",
             "auto_coin_selector_min_volume": "80000000",
-            "auto_coin_selector_add_coins_from_list": "True",
+            "auto_coin_selector_add_coins_from_list": "False",
+            "auto_coin_selector_add_owned_coins": "False",
+            "auto_coin_selector_min_volume_owned_coins": "0",
+            "auto_coin_selector_min_volume_coins_from_list": "0",
             "use_funding_wallet": "True",
             "min_balance_bridge_transfer_main2funding": "10",
             "max_balance_bridge_transfer_main2funding": "10000",
@@ -246,15 +249,14 @@ class Config:  # pylint: disable=too-few-public-methods,too-many-instance-attrib
                     auto_coin_selector_blacklist.append(line)
         self.AUTO_COIN_SELECTOR_BLACKLIST = auto_coin_selector_blacklist
 
-        self.AUTO_COIN_SELECTOR_MIN_VOLUME = float(
-            os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME") or config.get(USER_CFG_SECTION,
-                                                                          "auto_coin_selector_min_volume")
-        )
+        self.AUTO_COIN_SELECTOR_MIN_VOLUME = float(os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME") or config.get(USER_CFG_SECTION, "auto_coin_selector_min_volume"))
+        self.AUTO_COIN_SELECTOR_MIN_VOLUME_OWNED_COINS = float(os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME_OWNED_COINS") or config.get(USER_CFG_SECTION, "auto_coin_selector_min_volume_owned_coins"))
+        self.AUTO_COIN_SELECTOR_MIN_VOLUME_COINS_FROM_LIST = float(os.environ.get("AUTO_COIN_SELECTOR_MIN_VOLUME_COINS_FROM_LIST") or config.get(USER_CFG_SECTION, "auto_coin_selector_min_volume_coins_from_list"))
 
-        auto_coin_selector_add_coins_from_list_str = os.environ.get(
-            "AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST") or config.get(USER_CFG_SECTION,
-                                                                    "auto_coin_selector_add_coins_from_list")
+        auto_coin_selector_add_coins_from_list_str = os.environ.get("AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST") or config.get(USER_CFG_SECTION,"auto_coin_selector_add_coins_from_list")
         self.AUTO_COIN_SELECTOR_ADD_COINS_FROM_LIST = str(auto_coin_selector_add_coins_from_list_str).lower() == "true"
 
-        self.USE_FUNDING_WALLET = str(os.environ.get("USE_FUNDING_WALLET") or config.get(USER_CFG_SECTION,
-                                                                                         "use_funding_wallet")).lower() == "true"
+        auto_coin_selector_add_owned_coins_str = os.environ.get("AUTO_COIN_SELECTOR_ADD_OWNED_COINS") or config.get(USER_CFG_SECTION,"auto_coin_selector_add_owned_coins")
+        self.AUTO_COIN_SELECTOR_ADD_OWNED_COINS = str(auto_coin_selector_add_owned_coins_str).lower() == "true"
+
+        self.USE_FUNDING_WALLET = str(os.environ.get("USE_FUNDING_WALLET") or config.get(USER_CFG_SECTION, "use_funding_wallet")).lower() == "true"

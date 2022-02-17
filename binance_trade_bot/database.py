@@ -52,7 +52,7 @@ class Database:
 
     def set_coins(self, symbols: List[str]):
 
-        self.logger.info(f"setting coins: {symbols}")
+        self.logger.info(f"setting coins: {symbols}", notification=False)
 
         session: Session
 
@@ -83,6 +83,13 @@ class Database:
                         pair = session.query(Pair).filter(Pair.from_coin == from_coin, Pair.to_coin == to_coin).first()
                         if pair is None:
                             session.add(Pair(from_coin, to_coin))
+
+    def get_owned_coins(self):
+        session: Session
+        with self.db_session() as session:
+            owned_coins = [x[0] for x in session.query(Trade.alt_coin_id).distinct().filter(Trade.state == TradeState.COMPLETE).all()]
+            session.expunge_all()
+            return owned_coins
 
     def get_coins(self, only_enabled=True) -> List[Coin]:
         session: Session

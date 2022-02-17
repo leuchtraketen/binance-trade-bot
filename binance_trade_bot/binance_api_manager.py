@@ -271,7 +271,7 @@ class BinanceAPIManager:
             self.logger.debug(f"Fetched all ticker prices: {self.cache.ticker_values}")
             price = self.cache.ticker_values.get(ticker_symbol, None)
             if price is None:
-                self.logger.info(f"Ticker does not exist: {ticker_symbol} - will not be fetched from now on")
+                self.logger.info(f"Ticker does not exist: {ticker_symbol} - will not be fetched from now on", notification=False)
                 self.cache.non_existent_tickers.add(ticker_symbol)
 
         return price
@@ -667,7 +667,7 @@ class BinanceAPIManager:
         }
         result = self.binance_client._request_margin_api('post', 'asset/get-funding-asset', signed=True, data=params)
         self.logger.info(
-            f"Funding: balance result: {json.dumps(result)}"
+            f"Funding: balance result: {json.dumps(result)}", notification=False
         )
         for obj in result:
             return float(obj["free"])

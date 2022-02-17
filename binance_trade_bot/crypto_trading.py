@@ -33,7 +33,7 @@ def main():
         manager = BinanceAPIManager.create_manager(config, db, logger)
 
 
-    logger.info("Creating database schema if it doesn't already exist")
+    logger.info("Creating database schema if it doesn't already exist", notification=False)
     db.create_database()
 
 
