@@ -46,10 +46,9 @@ class AutoCoinSelector:
                 continue
 
             ticker = self.manager.get_ticker(coin + self.config.BRIDGE.symbol)
-            if float(ticker['quoteVolume']) >= self.config.AUTO_COIN_SELECTOR_MIN_VOLUME:
-                coins_to_trade.append(coin)
-                self.logger.info(f"Adding {coin}: volume = {float(ticker['quoteVolume'])}")
-
+            ########## if float(ticker['quoteVolume']) >= self.config.AUTO_COIN_SELECTOR_MIN_VOLUME:
+            ##########     coins_to_trade.append(coin)
+            ##########     self.logger.info(f"Adding {coin}: volume = {float(ticker['quoteVolume'])}")
 
             # append owned_coins if configured so
             if self.config.AUTO_COIN_SELECTOR_ADD_OWNED_COINS:
